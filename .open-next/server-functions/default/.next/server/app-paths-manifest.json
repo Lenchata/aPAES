@@ -1,0 +1,22 @@
+{
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/admin/login/page": "app/admin/login/page.js",
+  "/admin/page": "app/admin/page.js",
+  "/api/admin/global-exams/route": "app/api/admin/global-exams/route.js",
+  "/api/admin/login/route": "app/api/admin/login/route.js",
+  "/api/admin/passkey/login/options/route": "app/api/admin/passkey/login/options/route.js",
+  "/api/admin/passkey/login/verify/route": "app/api/admin/passkey/login/verify/route.js",
+  "/api/admin/passkey/options/route": "app/api/admin/passkey/options/route.js",
+  "/api/admin/passkey/verify/route": "app/api/admin/passkey/verify/route.js",
+  "/api/admin/setup/route": "app/api/admin/setup/route.js",
+  "/api/auth/login/options/route": "app/api/auth/login/options/route.js",
+  "/api/auth/login/verify/route": "app/api/auth/login/verify/route.js",
+  "/api/auth/registration/options/route": "app/api/auth/registration/options/route.js",
+  "/api/auth/registration/verify/route": "app/api/auth/registration/verify/route.js",
+  "/api/auth/session/route": "app/api/auth/session/route.js",
+  "/api/global-exams/route": "app/api/global-exams/route.js",
+  "/api/upload/route": "app/api/upload/route.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/page": "app/page.js"
+}
