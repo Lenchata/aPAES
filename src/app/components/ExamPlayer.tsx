@@ -81,12 +81,12 @@ export default function ExamPlayer({
 
   // ── Results screen ───────────────────────────────────────────────
   if (isFinished) {
-    const total       = questions.length;
-    const correct     = questions.filter(q => answers[q.id] === q.correctAnswer).length;
-    const incorrect   = questions.filter(q => q.id in answers && answers[q.id] !== q.correctAnswer).length;
-    const unanswered  = total - Object.keys(answers).length;
-    const autoScore   = calcScore(answers);
-    const pct         = Math.round((correct / total) * 100);
+    const total = questions.length;
+    const correct = questions.filter(q => answers[q.id] === q.correctAnswer).length;
+    const incorrect = questions.filter(q => q.id in answers && answers[q.id] !== q.correctAnswer).length;
+    const unanswered = total - Object.keys(answers).length;
+    const autoScore = calcScore(answers);
+    const pct = Math.round((correct / total) * 100);
 
     return (
       <div className="min-h-screen bg-[#05050A] text-white flex items-center justify-center p-6">
@@ -264,3 +264,4 @@ export default function ExamPlayer({
     </div>
   );
 }
+// tay ma gueon waton conchetumareeee
