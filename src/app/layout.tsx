@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Outfit, Bowlby_One } from "next/font/google";
 import "./globals.css";
+import AuthGate from "../components/AuthGate";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
@@ -19,7 +20,9 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className={`${inter.variable} ${outfit.variable} ${bowlbyOne.variable} font-inter antialiased bg-[#dadaec] text-black`}>
-        {children}
+        <AuthGate>
+          {children}
+        </AuthGate>
       </body>
     </html>
   );

@@ -1,0 +1,27 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getAdminByUsername } from '@/lib/auth_server';
+import { verifyPassword } from '@/lib/admin_crypto';
+
+export async function POST(req: NextRequest) {
+  try {
+    const { username, password } = await req.json();
+
+    const admin = getAdminByUsername(username);
+    if (!admin) {
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+    }
+
+    const isValid = verifyPassword(password, admin.password_hash);
+    if (!isValid) {
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+    }
+
+    const res = NextResponse.json({ success: true });
+    res.cookies.set('auth_admin_id', admin.id, { 
+      httpOnly: true, secure: true, sameSite: 'strict', maxAge: 60 * 60 * 2 
+    });
+    return res;
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}

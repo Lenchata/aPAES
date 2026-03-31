@@ -79,6 +79,7 @@ export default function Home() {
   const [activeExam, setActiveExam] = useState<{ questions: any[]; meta: any } | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(true);
   const [savedExams, setSavedExams] = useState<any[]>([]);
+  const [globalExams, setGlobalExams] = useState<any[]>([]);
   const [results, setResults] = useState<ExamResult[]>([]);
   const [goals, setGoals] = useState<Goals>(DEFAULT_GOALS);
   const [sections, setSections] = useState<Section[]>([{ id: "default", name: "Sin categoría" }]);
@@ -88,13 +89,21 @@ export default function Home() {
 
   useEffect(() => setMounted(true), []);
 
-  // Cargar localstorage
+  // Cargar localstorage y globales
   useEffect(() => {
     try { const v = localStorage.getItem("apaes_exams"); if (v) setSavedExams(JSON.parse(v)); } catch (_) { }
     try { const v = localStorage.getItem("apaes_results"); if (v) setResults(JSON.parse(v)); } catch (_) { }
     try { const v = localStorage.getItem("apaes_goals"); if (v) setGoals({ ...DEFAULT_GOALS, ...JSON.parse(v) }); } catch (_) { }
     try { const v = localStorage.getItem("apaes_sections"); if (v) setSections(JSON.parse(v)); } catch (_) { }
+    
+    // Cargar ensayos globales del server
+    fetch('/api/global-exams')
+      .then(r => r.json())
+      .then(data => setGlobalExams(Array.isArray(data) ? data : []))
+      .catch(console.error);
   }, []);
+
+  const allExams = [...globalExams, ...savedExams];
 
   const saveExam = (metadata: any, data: any) => {
     const updated = [...savedExams, { metadata, data, id: Date.now(), sectionId: "default" }];
@@ -204,7 +213,7 @@ export default function Home() {
         <main className="flex-1 overflow-y-auto pb-24 p-5">
           <div className="max-w-xl mx-auto w-full">
             {activeTab === "Inicio" && <InicioTab goals={goals} results={results} dark={dark} isMobile={true} />}
-            {activeTab === "Practicar" && <PracticarTab savedExams={savedExams} sections={sections} onStartExam={e => setActiveExam(e)} onAddClick={() => setActiveTab("Configuracion")} onAddSection={addSection} onDeleteSection={deleteSection} onRenameSection={renameSection} onMoveExam={moveExam} onDeleteExam={deleteExam} onUpdateExam={updateExam} dark={dark} isMobile={true} />}
+            {activeTab === "Practicar" && <PracticarTab savedExams={allExams} sections={sections} onStartExam={e => setActiveExam(e)} onAddClick={() => setActiveTab("Configuracion")} onAddSection={addSection} onDeleteSection={deleteSection} onRenameSection={renameSection} onMoveExam={moveExam} onDeleteExam={deleteExam} onUpdateExam={updateExam} dark={dark} isMobile={true} />}
             {activeTab === "Progreso" && <ProgresoTab goals={goals} results={results} onUpdateGoals={updateGoals} onDeleteResult={deleteResult} dark={dark} isMobile={true} />}
             {activeTab === "Configuracion" && <ConfiguracionTab onSaveExam={saveExam} dark={dark} isMobile={true} />}
           </div>
@@ -288,7 +297,7 @@ export default function Home() {
       <main className="flex-1 p-10 overflow-y-auto outline-none">
         <div className="max-w-5xl mx-auto w-full">
           {activeTab === "Inicio" && <InicioTab goals={goals} results={results} dark={dark} isMobile={false} />}
-          {activeTab === "Practicar" && <PracticarTab savedExams={savedExams} sections={sections} onStartExam={e => setActiveExam(e)} onAddClick={() => setActiveTab("Configuracion")} onAddSection={addSection} onDeleteSection={deleteSection} onRenameSection={renameSection} onMoveExam={moveExam} onDeleteExam={deleteExam} onUpdateExam={updateExam} dark={dark} isMobile={false} />}
+          {activeTab === "Practicar" && <PracticarTab savedExams={allExams} sections={sections} onStartExam={e => setActiveExam(e)} onAddClick={() => setActiveTab("Configuracion")} onAddSection={addSection} onDeleteSection={deleteSection} onRenameSection={renameSection} onMoveExam={moveExam} onDeleteExam={deleteExam} onUpdateExam={updateExam} dark={dark} isMobile={false} />}
           {activeTab === "Progreso" && <ProgresoTab goals={goals} results={results} onUpdateGoals={updateGoals} onDeleteResult={deleteResult} dark={dark} isMobile={false} />}
           {activeTab === "Configuracion" && <ConfiguracionTab onSaveExam={saveExam} dark={dark} isMobile={false} />}
         </div>
@@ -585,6 +594,9 @@ function PracticarTab({ savedExams, sections, onStartExam, onAddClick, onAddSect
                     {/* Status badge */}
                     {exam.status && exam.status !== "none" && (
                       <div className={`absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full border border-black ${status.color} z-10`} title={status.label} />
+                    )}
+                    {exam.isGlobal && (
+                      <div className="absolute top-1.5 right-1.5 bg-[#6c40d6] text-white text-[8px] font-black px-1.5 rounded border border-black z-10">GLOBAL</div>
                     )}
                     <div className="flex justify-between items-center bg-[#298d5c] text-white px-2 py-0.5 rounded text-[10px] font-bold mb-2 border-2 border-black">
                       <span>{exam.metadata?.año || "2024"}</span>
