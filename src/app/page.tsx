@@ -60,6 +60,17 @@ function useTheme() {
   return { dark, toggle };
 }
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 1024);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+  return isMobile;
+}
+
 // ────────────────────────────────────────────────────────────────────────────
 // root
 // ────────────────────────────────────────────────────────────────────────────
@@ -72,6 +83,10 @@ export default function Home() {
   const [goals, setGoals] = useState<Goals>(DEFAULT_GOALS);
   const [sections, setSections] = useState<Section[]>([{ id: "default", name: "Sin categoría" }]);
   const { dark, toggle: toggleDark } = useTheme();
+  const isMobile = useIsMobile();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   // Cargar localstorage
   useEffect(() => {
@@ -169,6 +184,55 @@ export default function Home() {
   const tx = dark ? "text-slate-100" : "text-black";
   const border = dark ? "border-white/10" : "border-black";
 
+  if (!mounted) return null;
+
+  if (isMobile) {
+    return (
+      <div className={`min-h-screen flex flex-col font-sans ${bg} ${tx} transition-colors duration-300`}>
+        {/* Header Movil */}
+        <header className={`h-16 shrink-0 ${navBg} border-b-[3px] ${border} flex items-center justify-between px-5 z-20`}>
+          <div className="flex items-center gap-2">
+            <img fetchPriority="high" src="/apaes.svg" alt="logo" className="w-8 h-8" />
+            <span className="text-xl text-white font-bowlby tracking-wider" style={{ WebkitTextStroke: "1px black" }}>aPAES</span>
+          </div>
+          <button onClick={toggleDark} className="text-white p-2 rounded-lg bg-white/10">
+            {dark ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+        </header>
+
+        {/* Contenido */}
+        <main className="flex-1 overflow-y-auto pb-24 p-5">
+          <div className="max-w-xl mx-auto w-full">
+            {activeTab === "Inicio" && <InicioTab goals={goals} results={results} dark={dark} isMobile={true} />}
+            {activeTab === "Practicar" && <PracticarTab savedExams={savedExams} sections={sections} onStartExam={e => setActiveExam(e)} onAddClick={() => setActiveTab("Configuracion")} onAddSection={addSection} onDeleteSection={deleteSection} onRenameSection={renameSection} onMoveExam={moveExam} onDeleteExam={deleteExam} onUpdateExam={updateExam} dark={dark} isMobile={true} />}
+            {activeTab === "Progreso" && <ProgresoTab goals={goals} results={results} onUpdateGoals={updateGoals} onDeleteResult={deleteResult} dark={dark} isMobile={true} />}
+            {activeTab === "Configuracion" && <ConfiguracionTab onSaveExam={saveExam} dark={dark} isMobile={true} />}
+          </div>
+        </main>
+
+        {/* Bottom Nav */}
+        <nav className={`fixed bottom-0 left-0 right-0 h-20 ${navBg} border-t-[4px] ${border} flex items-center justify-around px-2 z-20 pb-safe`}>
+          {tabs.map(tab => {
+            const Icon = tab.icon;
+            const active = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex flex-col items-center gap-1 transition-all ${active ? "text-white scale-110" : "text-white/50"}`}
+              >
+                <div className={`p-2 rounded-xl transition-all ${active ? "bg-[#6c40d6] border-[2px] border-black shadow-[2px_2px_0_#000]" : ""}`}>
+                  <Icon size={24} strokeWidth={active ? 3 : 2} />
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-tighter">{tab.id}</span>
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+    );
+  }
+
   return (
     <div className={`min-h-screen flex font-sans ${bg} ${tx} transition-colors duration-300`}>
       {/* ── Sidebar ── */}
@@ -183,7 +247,7 @@ export default function Home() {
         {/* Logo */}
         <div className={`flex flex-col items-center transition-all duration-300 ${isMenuOpen ? "opacity-100 mb-16" : "opacity-0 h-0 overflow-hidden mb-0 pointer-events-none"}`}>
           <div className="w-[400px] h-[380px] mb-3">
-            <img src="/apaes.svg" alt="aPAES logo" className="w-full h-full drop-shadow-md object-contain" />
+            <img fetchPriority="high" src="/apaes.svg" alt="aPAES logo" className="w-full h-full drop-shadow-md object-contain" />
           </div>
           <span className="text-[2.2rem] text-white tracking-widest text-center font-bowlby" style={{ WebkitTextStroke: "1.5px black", textShadow: "2px 2px 0 #000" }}>
             aPAES
@@ -223,10 +287,10 @@ export default function Home() {
       {/* ── tab completo ── */}
       <main className="flex-1 p-10 overflow-y-auto outline-none">
         <div className="max-w-5xl mx-auto w-full">
-          {activeTab === "Inicio" && <InicioTab goals={goals} results={results} dark={dark} />}
-          {activeTab === "Practicar" && <PracticarTab savedExams={savedExams} sections={sections} onStartExam={e => setActiveExam(e)} onAddClick={() => setActiveTab("Configuracion")} onAddSection={addSection} onDeleteSection={deleteSection} onRenameSection={renameSection} onMoveExam={moveExam} onDeleteExam={deleteExam} onUpdateExam={updateExam} dark={dark} />}
-          {activeTab === "Progreso" && <ProgresoTab goals={goals} results={results} onUpdateGoals={updateGoals} onDeleteResult={deleteResult} dark={dark} />}
-          {activeTab === "Configuracion" && <ConfiguracionTab onSaveExam={saveExam} dark={dark} />}
+          {activeTab === "Inicio" && <InicioTab goals={goals} results={results} dark={dark} isMobile={false} />}
+          {activeTab === "Practicar" && <PracticarTab savedExams={savedExams} sections={sections} onStartExam={e => setActiveExam(e)} onAddClick={() => setActiveTab("Configuracion")} onAddSection={addSection} onDeleteSection={deleteSection} onRenameSection={renameSection} onMoveExam={moveExam} onDeleteExam={deleteExam} onUpdateExam={updateExam} dark={dark} isMobile={false} />}
+          {activeTab === "Progreso" && <ProgresoTab goals={goals} results={results} onUpdateGoals={updateGoals} onDeleteResult={deleteResult} dark={dark} isMobile={false} />}
+          {activeTab === "Configuracion" && <ConfiguracionTab onSaveExam={saveExam} dark={dark} isMobile={false} />}
         </div>
       </main>
     </div>
@@ -256,22 +320,23 @@ function SectionCard({ title, children, dark }: { title: string; children?: Reac
 // ────────────────────────────────────────────────────────────────────────────
 // panel inicio
 // ────────────────────────────────────────────────────────────────────────────
-function InicioTab({ goals, results, dark }: { goals: Goals; results: ExamResult[]; dark: boolean }) {
+function InicioTab({ goals, results, dark, isMobile }: { goals: Goals; results: ExamResult[]; dark: boolean; isMobile: boolean }) {
   const tx = dark ? "text-slate-100" : "text-black";
   const sub = dark ? "text-slate-400" : "text-slate-600";
   const history = results.slice(-8);
   const maxScore = Math.max(...history.map(r => r.score), goals.puntajeDeseado, 100);
 
   return (
-    <div className="w-full flex flex-col gap-8">
+    <div className="w-full flex flex-col gap-6 md:gap-8">
       <Card dark={dark}>
-        <h2 className={`text-[1.6rem] font-black mb-1 tracking-tight flex items-center justify-between ${tx}`}>
+        <h2 className={`text-[1.3rem] md:text-[1.6rem] font-black mb-1 tracking-tight flex flex-col md:flex-row md:items-center justify-between gap-2 ${tx}`}>
           <span>Historial de Puntaje</span>
-          <span className={`text-sm font-bold px-3 py-1 rounded-full border-2 ${dark ? "bg-white/10 border-white/20" : "bg-[#e2deef] border-black"}`}>
+          <span className={`text-xs font-bold px-3 py-1 rounded-full border-2 self-start ${dark ? "bg-white/10 border-white/20" : "bg-[#e2deef] border-black"}`}>
             Meta: {goals.puntajeDeseado} pts
           </span>
         </h2>
         <p className={`text-xs mb-6 ${sub}`}>Últimos {history.length || 0} ensayos registrados</p>
+
 
         {history.length === 0 ? (
           <div className={`flex flex-col items-center justify-center h-40 gap-2 ${sub}`}>
@@ -311,15 +376,15 @@ function InicioTab({ goals, results, dark }: { goals: Goals; results: ExamResult
 
       {/* Stats row */}
       {results.length > 0 && (
-        <div className="grid grid-cols-3 gap-4">
+        <div className={`grid ${isMobile ? "grid-cols-1" : "grid-cols-3"} gap-4`}>
           {[
             { label: "Mejor puntaje", value: Math.max(...results.map(r => r.score)), unit: "pts" },
             { label: "Promedio", value: Math.round(results.reduce((s, r) => s + r.score, 0) / results.length), unit: "pts" },
             { label: "Ensayos realizados", value: results.length, unit: "" },
           ].map(s => (
-            <Card key={s.label} dark={dark} className="text-center">
-              <p className={`text-xs font-bold uppercase tracking-wider mb-2 ${dark ? "text-slate-400" : "text-slate-500"}`}>{s.label}</p>
-              <p className={`text-4xl font-black ${dark ? "text-indigo-300" : "text-[#6c40d6]"}`}>{s.value}<span className="text-lg ml-1">{s.unit}</span></p>
+            <Card key={s.label} dark={dark} className={`${isMobile ? "p-4" : "p-6"} text-center`}>
+              <p className={`text-[10px] md:text-xs font-bold uppercase tracking-wider mb-1 md:mb-2 ${dark ? "text-slate-400" : "text-slate-500"}`}>{s.label}</p>
+              <p className={`${isMobile ? "text-2xl" : "text-4xl"} font-black ${dark ? "text-indigo-300" : "text-[#6c40d6]"}`}>{s.value}<span className="text-lg ml-1">{s.unit}</span></p>
             </Card>
           ))}
         </div>
@@ -327,8 +392,9 @@ function InicioTab({ goals, results, dark }: { goals: Goals; results: ExamResult
 
       {/* Per-prueba trabajo  */}
       <Card dark={dark}>
-        <h2 className={`text-[1.5rem] font-black tracking-tight mb-5 ${dark ? "text-slate-100" : "text-black"}`}>Metas por prueba</h2>
-        <div className="flex flex-wrap gap-4">
+        <h2 className={`text-[1.2rem] md:text-[1.5rem] font-black tracking-tight mb-5 ${dark ? "text-slate-100" : "text-black"}`}>Metas por prueba</h2>
+        <div className="flex flex-wrap gap-3 md:gap-4">
+
           {goals.pruebasSeleccionadas.length === 0 && (
             <p className={`text-sm ${dark ? "text-slate-500" : "text-slate-400"}`}>Configura tus pruebas en la sección <strong>Progreso</strong>.</p>
           )}
@@ -363,7 +429,7 @@ function InicioTab({ goals, results, dark }: { goals: Goals; results: ExamResult
 // ────────────────────────────────────────────────────────────────────────────
 // PracticarTab — secciones con drag n drop
 // ────────────────────────────────────────────────────────────────────────────
-function PracticarTab({ savedExams, sections, onStartExam, onAddClick, onAddSection, onDeleteSection, onRenameSection, onMoveExam, onDeleteExam, onUpdateExam, dark }: {
+function PracticarTab({ savedExams, sections, onStartExam, onAddClick, onAddSection, onDeleteSection, onRenameSection, onMoveExam, onDeleteExam, onUpdateExam, dark, isMobile }: {
   savedExams: any[];
   sections: Section[];
   onStartExam: (e: { questions: any[]; meta: any }) => void;
@@ -375,6 +441,7 @@ function PracticarTab({ savedExams, sections, onStartExam, onAddClick, onAddSect
   onDeleteExam: (examId: number) => void;
   onUpdateExam: (examId: number, patch: Record<string, any>) => void;
   dark: boolean;
+  isMobile: boolean;
 }) {
   const [draggingId, setDraggingId] = useState<number | null>(null);
   const [dragOverSection, setDragOverSection] = useState<string | null>(null);
@@ -491,7 +558,7 @@ function PracticarTab({ savedExams, sections, onStartExam, onAddClick, onAddSect
             </div>
 
             {/* Exam cards grid */}
-            <div className="p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className={`p-4 grid ${isMobile ? "grid-cols-2" : "grid-cols-2 md:grid-cols-3 lg:grid-cols-4"} gap-4`}>
               {exams.map(exam => {
                 const status = STATUSES.find(s => s.key === (exam.status || "none")) ?? STATUSES[0];
                 const displayLabel = exam.customLabel || exam.metadata?.asignatura || "Ensayo";
@@ -664,12 +731,13 @@ function PracticarTab({ savedExams, sections, onStartExam, onAddClick, onAddSect
 // ────────────────────────────────────────────────────────────────────────────
 // ProgresoTab — goals + results table with grouping
 // ────────────────────────────────────────────────────────────────────────────
-function ProgresoTab({ goals, results, onUpdateGoals, onDeleteResult, dark }: {
+function ProgresoTab({ goals, results, onUpdateGoals, onDeleteResult, dark, isMobile }: {
   goals: Goals;
   results: ExamResult[];
   onUpdateGoals: (g: Goals) => void;
   onDeleteResult: (id: number) => void;
   dark: boolean;
+  isMobile: boolean;
 }) {
   const [localGoals, setLocalGoals] = useState<Goals>({ ...goals });
   const [saved, setSaved] = useState(false);
@@ -826,67 +894,95 @@ function ProgresoTab({ goals, results, onUpdateGoals, onDeleteResult, dark }: {
                     </div>
                   </button>
 
-                  {/* Table */}
+                  {/* Table / Mobile Cards */}
                   {!isCollapsed && (
                     <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className={`text-xs font-bold uppercase ${dark ? "bg-white/5 text-slate-400" : "bg-[#f9f7ff] text-slate-500"}`}>
-                            <th className="px-4 py-2 text-left">Fecha</th>
-                            <th className="px-4 py-2 text-left">Asignatura</th>
-                            <th className="px-4 py-2 text-left">Año</th>
-                            <th className="px-4 py-2 text-left">Grupo</th>
-                            <th className="px-4 py-2 text-right">Puntaje</th>
-                            <th className="px-4 py-2 text-right">Resp.</th>
-                            <th className="px-4 py-2 text-right">Tiempo</th>
-                            <th className="px-4 py-2" />
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {items.map((r, ri) => {
-                            const t = r.elapsedSecs;
-                            const timeStr = `${Math.floor(t / 60).toString().padStart(2, "0")}:${(t % 60).toString().padStart(2, "0")}`;
-                            const isEven = ri % 2 === 0;
-                            return (
-                              <tr key={r.id} className={`border-t ${dark ? "border-white/5" : "border-black/5"} ${isEven ? dark ? "bg-white/0" : "bg-white" : dark ? "bg-white/[0.03]" : "bg-[#faf9ff]"}`}>
-                                <td className={`px-4 py-2.5 ${sub}`}>{r.date}</td>
-                                <td className={`px-4 py-2.5 font-semibold ${tx}`}>{r.asignatura}</td>
-                                <td className={`px-4 py-2.5 ${sub}`}>{r.año}</td>
-                                <td className="px-4 py-2.5">
-                                  {editingId === r.id ? (
-                                    <div className="flex gap-1">
-                                      <input
-                                        className={`text-xs p-1 border rounded w-28 focus:outline-none ${dark ? "bg-white/10 border-white/20 text-white" : "bg-[#f4f2f9] border-black"}`}
-                                        value={editGroup}
-                                        onChange={e => setEditGroup(e.target.value)}
-                                        autoFocus
-                                      />
-                                      <button className="text-emerald-400 text-xs font-bold px-1"
-                                        onClick={() => { /* TODO: persist edit in parent if needed */ setEditingId(null); }}>✓</button>
-                                    </div>
-                                  ) : (
-                                    <span className={`text-xs cursor-pointer hover:underline ${sub}`} onClick={() => { setEditingId(r.id); setEditGroup(r.group); }}>{r.group}</span>
-                                  )}
-                                </td>
-                                <td className="px-4 py-2.5 text-right">
-                                  <span className={`font-black text-base ${r.score >= 700 ? "text-emerald-500" : r.score >= 500 ? "text-amber-400" : "text-rose-400"}`}>
+                      {isMobile ? (
+                        <div className="flex flex-col">
+                          {items.map((r, ri) => (
+                            <div key={r.id} className={`p-4 border-t ${dark ? "border-white/5" : "border-black/5"} flex flex-col gap-2`}>
+                              <div className="flex justify-between items-center">
+                                <span className={`text-[10px] font-bold ${sub}`}>{r.date}</span>
+                                <span className={`text-xs px-2 py-0.5 rounded bg-white/10 ${sub}`}>{r.group}</span>
+                              </div>
+                              <div className="flex justify-between items-end">
+                                <div>
+                                  <p className={`font-bold text-sm ${tx}`}>{r.asignatura}</p>
+                                  <p className={`text-[10px] ${sub}`}>{r.año} • {Math.floor(r.elapsedSecs / 60)} min • {r.answered}/{r.total} resp.</p>
+                                </div>
+                                <div className="flex flex-col items-end gap-1">
+                                  <span className={`font-black text-xl ${r.score >= 700 ? "text-emerald-500" : r.score >= 500 ? "text-amber-400" : "text-rose-400"}`}>
                                     {r.score}
                                   </span>
-                                </td>
-                                <td className={`px-4 py-2.5 text-right text-xs ${sub}`}>{r.answered}/{r.total}</td>
-                                <td className={`px-4 py-2.5 text-right text-xs font-mono ${sub}`}>{timeStr}</td>
-                                <td className="px-4 py-2.5 text-right">
-                                  <button onClick={() => onDeleteResult(r.id)} className="text-rose-400 hover:text-rose-300 transition-colors p-1" title="Eliminar">
+                                  <button onClick={() => onDeleteResult(r.id)} className="text-rose-400">
                                     <Trash2 size={14} />
                                   </button>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className={`text-xs font-bold uppercase ${dark ? "bg-white/5 text-slate-400" : "bg-[#f9f7ff] text-slate-500"}`}>
+                              <th className="px-4 py-2 text-left">Fecha</th>
+                              <th className="px-4 py-2 text-left">Asignatura</th>
+                              <th className="px-4 py-2 text-left">Año</th>
+                              <th className="px-4 py-2 text-left">Grupo</th>
+                              <th className="px-4 py-2 text-right">Puntaje</th>
+                              <th className="px-4 py-2 text-right">Resp.</th>
+                              <th className="px-4 py-2 text-right">Tiempo</th>
+                              <th className="px-4 py-2" />
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {items.map((r, ri) => {
+                              const t = r.elapsedSecs;
+                              const timeStr = `${Math.floor(t / 60).toString().padStart(2, "0")}:${(t % 60).toString().padStart(2, "0")}`;
+                              const isEven = ri % 2 === 0;
+                              return (
+                                <tr key={r.id} className={`border-t ${dark ? "border-white/5" : "border-black/5"} ${isEven ? dark ? "bg-white/0" : "bg-white" : dark ? "bg-white/[0.03]" : "bg-[#faf9ff]"}`}>
+                                  <td className={`px-4 py-2.5 ${sub}`}>{r.date}</td>
+                                  <td className={`px-4 py-2.5 font-semibold ${tx}`}>{r.asignatura}</td>
+                                  <td className={`px-4 py-2.5 ${sub}`}>{r.año}</td>
+                                  <td className="px-4 py-2.5">
+                                    {editingId === r.id ? (
+                                      <div className="flex gap-1">
+                                        <input
+                                          className={`text-xs p-1 border rounded w-28 focus:outline-none ${dark ? "bg-white/10 border-white/20 text-white" : "bg-[#f4f2f9] border-black"}`}
+                                          value={editGroup}
+                                          onChange={e => setEditGroup(e.target.value)}
+                                          autoFocus
+                                        />
+                                        <button className="text-emerald-400 text-xs font-bold px-1"
+                                          onClick={() => { /* TODO: persist edit in parent if needed */ setEditingId(null); }}>✓</button>
+                                      </div>
+                                    ) : (
+                                      <span className={`text-xs cursor-pointer hover:underline ${sub}`} onClick={() => { setEditingId(r.id); setEditGroup(r.group); }}>{r.group}</span>
+                                    )}
+                                  </td>
+                                  <td className="px-4 py-2.5 text-right">
+                                    <span className={`font-black text-base ${r.score >= 700 ? "text-emerald-500" : r.score >= 500 ? "text-amber-400" : "text-rose-400"}`}>
+                                      {r.score}
+                                    </span>
+                                  </td>
+                                  <td className={`px-4 py-2.5 text-right text-xs ${sub}`}>{r.answered}/{r.total}</td>
+                                  <td className={`px-4 py-2.5 text-right text-xs font-mono ${sub}`}>{timeStr}</td>
+                                  <td className="px-4 py-2.5 text-right">
+                                    <button onClick={() => onDeleteResult(r.id)} className="text-rose-400 hover:text-rose-300 transition-colors p-1" title="Eliminar">
+                                      <Trash2 size={14} />
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      )}
                     </div>
                   )}
+
                 </div>
               );
             })}
@@ -900,7 +996,7 @@ function ProgresoTab({ goals, results, onUpdateGoals, onDeleteResult, dark }: {
 // ────────────────────────────────────────────────────────────────────────────
 // ConfiguracionTab — only JSON import now
 // ────────────────────────────────────────────────────────────────────────────
-function ConfiguracionTab({ onSaveExam, dark }: { onSaveExam: (meta: any, d: any) => void; dark: boolean }) {
+function ConfiguracionTab({ onSaveExam, dark, isMobile }: { onSaveExam: (meta: any, d: any) => void; dark: boolean; isMobile: boolean }) {
   const [jsonInput, setJsonInput] = useState("");
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
@@ -950,12 +1046,13 @@ function ConfiguracionTab({ onSaveExam, dark }: { onSaveExam: (meta: any, d: any
 
         <div className="relative">
           <textarea
-            className={`w-full h-96 p-5 font-mono text-[13px] border-[3px] rounded-lg shadow-inner focus:outline-none focus:border-[#7141d9] focus:ring-2 focus:ring-[#7141d9]/30 resize-y
+            className={`w-full ${isMobile ? "h-64" : "h-96"} p-5 font-mono text-[13px] border-[3px] rounded-lg shadow-inner focus:outline-none focus:border-[#7141d9] focus:ring-2 focus:ring-[#7141d9]/30 resize-y
               ${dark ? "bg-white/5 border-white/10 text-slate-100" : "bg-[#f4f2f9] border-black text-black"}`}
             value={jsonInput}
             onChange={e => setJsonInput(e.target.value)}
             placeholder={'{\n  "metadata": { "año": 2027, "asignatura": "Matemática 1" },\n  "preguntas": [\n    {\n      "id": 1,\n      "enunciado": "...",\n      "opciones": { "A": "...", "B": "..." },\n      "respuesta_correcta": "A",\n      "explicacion": "..."\n    }\n  ]\n}'}
           />
+
           <button
             onClick={loadExample}
             className={`absolute top-4 right-6 text-xs font-bold px-3 py-1 rounded border-2 transition-all active:translate-y-0.5

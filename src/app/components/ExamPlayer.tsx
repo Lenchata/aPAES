@@ -43,6 +43,14 @@ export default function ExamPlayer({
     return () => clearInterval(iv);
   }, [isFinished, startTime]);
 
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 1024);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
   const mins = Math.floor(elapsed / 60).toString().padStart(2, "0");
   const secs = (elapsed % 60).toString().padStart(2, "0");
   const question = questions[currentIndex];
@@ -183,33 +191,33 @@ export default function ExamPlayer({
   // ── Exam screen ──────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[#05050A] text-white flex flex-col font-inter">
-      <header className="h-20 border-b border-white/10 flex items-center justify-between px-8 bg-[#0A0A14] sticky top-0 z-50">
+      <header className={`${isMobile ? "h-16 px-4" : "h-20 px-8"} border-b border-white/10 flex items-center justify-between bg-[#0A0A14] sticky top-0 z-50`}>
         <button
           onClick={() => { if (confirm("¿Salir sin guardar?")) onExit(); }}
-          className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors border border-white/10 px-4 py-2 rounded-lg"
+          className={`flex items-center gap-2 text-slate-400 hover:text-white transition-colors border border-white/10 ${isMobile ? "p-2" : "px-4 py-2"} rounded-lg`}
         >
-          <LogOut size={18} /> Salir
+          <LogOut size={18} /> {!isMobile && "Salir"}
         </button>
-        <div className="flex gap-6 items-center">
-          <div className="bg-white/5 px-4 py-2 rounded-lg border border-white/10 font-mono font-bold tracking-widest text-indigo-400 flex items-center gap-2">
-            <Clock size={18} /> {mins}:{secs}
+        <div className={`flex ${isMobile ? "gap-2" : "gap-6"} items-center`}>
+          <div className={`${isMobile ? "px-2 py-1 text-xs" : "px-4 py-2"} bg-white/5 rounded-lg border border-white/10 font-mono font-bold tracking-widest text-indigo-400 flex items-center gap-2`}>
+            <Clock size={isMobile ? 14 : 18} /> {mins}:{secs}
           </div>
-          <div className="bg-gradient-to-r from-indigo-500/20 to-transparent px-4 py-2 rounded-lg border border-indigo-500/30 text-indigo-200 font-semibold">
-            Pregunta {currentIndex + 1} / {questions.length}
+          <div className={`${isMobile ? "px-2 py-1 text-xs" : "px-4 py-2"} bg-gradient-to-r from-indigo-500/20 to-transparent rounded-lg border border-indigo-500/30 text-indigo-200 font-semibold`}>
+            {isMobile ? `${currentIndex + 1}/${questions.length}` : `Pregunta ${currentIndex + 1} / ${questions.length}`}
           </div>
         </div>
       </header>
 
-      <main className="flex-1 flex overflow-hidden p-6 gap-6 relative">
+      <main className={`flex-1 flex overflow-hidden ${isMobile ? "flex-col p-4" : "p-6 gap-6"} relative`}>
         <div className="absolute top-0 right-1/4 w-[600px] h-[600px] bg-pink-500/5 blur-[120px] rounded-full pointer-events-none" />
 
-        <section className="flex-1 overflow-y-auto pr-4 flex flex-col pt-4">
-          <div className="max-w-3xl w-full mx-auto flex-1 flex flex-col">
-            <div className="bg-white/5 border border-white/10 p-8 rounded-3xl mb-8 shadow-lg z-10">
-              <h2 className="text-2xl font-semibold leading-relaxed whitespace-pre-wrap font-outfit">{question.text}</h2>
+        <section className={`flex-1 overflow-y-auto ${isMobile ? "" : "pr-4"} flex flex-col pt-4`}>
+          <div className={`${isMobile ? "w-full" : "max-w-3xl w-full"} mx-auto flex-1 flex flex-col`}>
+            <div className={`${isMobile ? "p-5 mb-4 text-lg" : "p-8 mb-8 text-2xl"} bg-white/5 border border-white/10 rounded-3xl shadow-lg z-10`}>
+              <h2 className="font-semibold leading-relaxed whitespace-pre-wrap font-outfit">{question.text}</h2>
             </div>
 
-            <div className="space-y-4 mb-12 flex-1">
+            <div className="space-y-3 md:space-y-4 mb-8 md:mb-12 flex-1">
               {(question.options as string[]).map((opt, idx) => {
                 const letter = String.fromCharCode(65 + idx);
                 const isSelected = answers[question.id] === letter;
@@ -217,39 +225,39 @@ export default function ExamPlayer({
                   <button
                     key={idx}
                     onClick={() => handleSelect(letter)}
-                    className={`w-full text-left p-5 rounded-2xl border transition-all duration-200 flex items-start gap-4
+                    className={`w-full text-left ${isMobile ? "p-4" : "p-5"} rounded-2xl border transition-all duration-200 flex items-start gap-4
                       ${isSelected
-                        ? "bg-indigo-500 border-indigo-400 shadow-[0_0_30px_rgba(99,102,241,0.3)] translate-x-2"
+                        ? "bg-indigo-500 border-indigo-400 shadow-[0_0_30px_rgba(99,102,241,0.3)] translate-x-1"
                         : "bg-[#0A0A14] border-white/10 hover:border-white/30 hover:bg-white/5"}`}
                   >
                     <span className={`font-bold mt-0.5 ${isSelected ? "text-indigo-200" : "text-slate-500"}`}>{letter}</span>
-                    <span className={`leading-relaxed ${isSelected ? "text-white font-medium" : "text-slate-300"}`}>{opt}</span>
+                    <span className={`leading-relaxed text-sm md:text-base ${isSelected ? "text-white font-medium" : "text-slate-300"}`}>{opt}</span>
                   </button>
                 );
               })}
             </div>
 
-            <div className="flex justify-between mt-auto pt-6 border-t border-white/10 z-10">
+            <div className={`flex justify-between mt-auto pt-6 border-t border-white/10 z-10 ${isMobile ? "pb-4" : ""}`}>
               <button
                 onClick={() => setCurrentIndex(i => Math.max(0, i - 1))}
                 disabled={currentIndex === 0}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl border border-white/10 bg-[#0A0A14] hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className={`${isMobile ? "px-4 py-2 text-sm" : "px-6 py-3"} flex items-center gap-2 rounded-xl border border-white/10 bg-[#0A0A14] hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-all`}
               >
-                <ChevronLeft size={20} /> Anterior
+                <ChevronLeft size={isMobile ? 16 : 20} /> {isMobile ? "" : "Anterior"}
               </button>
               {currentIndex === questions.length - 1 ? (
                 <button
                   onClick={finishExam}
-                  className="flex items-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-white font-bold hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all"
+                  className={`${isMobile ? "px-6 py-2 text-sm" : "px-8 py-3 font-bold"} flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-white hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all`}
                 >
-                  <CheckCircle2 size={20} /> Terminar Ensayo
+                  <CheckCircle2 size={isMobile ? 16 : 20} /> Finalizar
                 </button>
               ) : (
                 <button
                   onClick={() => setCurrentIndex(i => Math.min(questions.length - 1, i + 1))}
-                  className="flex items-center gap-2 px-8 py-3 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-bold hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all"
+                  className={`${isMobile ? "px-6 py-2 text-sm" : "px-8 py-3 font-bold"} flex items-center gap-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all`}
                 >
-                  Siguiente <ChevronRight size={20} />
+                  {isMobile ? "" : "Siguiente"} <ChevronRight size={isMobile ? 16 : 20} />
                 </button>
               )}
             </div>
@@ -257,9 +265,11 @@ export default function ExamPlayer({
           </div>
         </section>
 
-        <aside className="w-[480px] shrink-0 h-full shadow-2xl z-10 flex flex-col">
-          <CanvasBoard />
-        </aside>
+        {!isMobile && (
+          <aside className="w-[480px] shrink-0 h-full shadow-2xl z-10 flex flex-col">
+            <CanvasBoard />
+          </aside>
+        )}
       </main>
     </div>
   );
