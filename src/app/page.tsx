@@ -238,7 +238,7 @@ export default function Home() {
 // ────────────────────────────────────────────────────────────────────────────
 function Card({ children, dark, className = "" }: { children: React.ReactNode; dark: boolean; className?: string }) {
   return (
-    <div className={`border-[4px] rounded-2xl p-6 ${dark ? "bg-[#12112a] border-white/10 shadow-[6px_6px_0px_rgba(255,255,255,0.03)]" : "bg-white border-black shadow-[6px_6px_0px_rgba(0,0,0,0.12)]"} ${className}`}>
+    <div className={`border-[4px] rounded-2xl p-6 ${dark ? "bg-[#12112a] border-white/10 -[6px_6px_0px_shadowrgba(255,255,255,0.03)]" : "bg-white border-black"} ${className}`}>
       {children}
     </div>
   );
@@ -397,9 +397,9 @@ function PracticarTab({ savedExams, sections, onStartExam, onAddClick, onAddSect
   const closeCtxMenu = () => setCtxMenu(null);
 
   const STATUSES = [
-    { key: "none",      label: "Sin estado",   color: "bg-gray-400",    icon: "○" },
-    { key: "pending",   label: "Pendiente",    color: "bg-amber-400",   icon: "◑" },
-    { key: "completed", label: "Completado",   color: "bg-emerald-500", icon: "●" },
+    { key: "none", label: "Sin estado", color: "bg-gray-400", icon: "○" },
+    { key: "pending", label: "Pendiente", color: "bg-amber-400", icon: "◑" },
+    { key: "completed", label: "Completado", color: "bg-emerald-500", icon: "●" },
   ] as const;
   type StatusKey = typeof STATUSES[number]["key"];
 
@@ -613,9 +613,8 @@ function PracticarTab({ savedExams, sections, onStartExam, onAddClick, onAddSect
             <div className="fixed inset-0 z-40" onClick={closeCtxMenu} onContextMenu={e => { e.preventDefault(); closeCtxMenu(); }} />
             {/* menu */}
             <div
-              className={`fixed z-50 min-w-[180px] rounded-xl border-[3px] shadow-[6px_6px_0px_rgba(0,0,0,0.35)] overflow-hidden text-sm font-bold ${
-                dark ? "bg-[#1a0f38] border-white/20 text-slate-100" : "bg-white border-black text-black"
-              }`}
+              className={`fixed z-50 min-w-[180px] rounded-xl border-[3px] shadow-[6px_6px_0px_rgba(0,0,0,0.35)] overflow-hidden text-sm font-bold ${dark ? "bg-[#1a0f38] border-white/20 text-slate-100" : "bg-white border-black text-black"
+                }`}
               style={{ top: Math.min(ctxMenu.y, window.innerHeight - 200), left: Math.min(ctxMenu.x, window.innerWidth - 200) }}
             >
               {/* header */}
@@ -624,9 +623,8 @@ function PracticarTab({ savedExams, sections, onStartExam, onAddClick, onAddSect
               </div>
               {/* Rename */}
               <button
-                className={`w-full flex items-center gap-3 px-4 py-3 transition-colors ${
-                  dark ? "hover:bg-white/10" : "hover:bg-[#f0edf9]"
-                }`}
+                className={`w-full flex items-center gap-3 px-4 py-3 transition-colors ${dark ? "hover:bg-white/10" : "hover:bg-[#f0edf9]"
+                  }`}
                 onClick={() => {
                   setEditingLabelId(exam.id);
                   setEditingLabel(exam.customLabel || exam.metadata?.asignatura || "");
@@ -638,9 +636,8 @@ function PracticarTab({ savedExams, sections, onStartExam, onAddClick, onAddSect
               </button>
               {/* Status */}
               <button
-                className={`w-full flex items-center gap-3 px-4 py-3 transition-colors ${
-                  dark ? "hover:bg-white/10" : "hover:bg-[#f0edf9]"
-                }`}
+                className={`w-full flex items-center gap-3 px-4 py-3 transition-colors ${dark ? "hover:bg-white/10" : "hover:bg-[#f0edf9]"
+                  }`}
                 onClick={() => cycleStatus(exam)}
               >
                 <span className={`w-3.5 h-3.5 rounded-full border-2 border-black shrink-0 ${nextStatus.color}`} />
