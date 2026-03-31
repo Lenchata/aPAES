@@ -1,0 +1,22 @@
+import { NextResponse } from 'next/server';
+import { generateAuthenticationOptions } from '@simplewebauthn/server';
+import { rpID } from '@/lib/auth_server';
+
+export async function POST() {
+  try {
+    const options = await generateAuthenticationOptions({
+      rpID,
+      userVerification: 'preferred',
+    });
+
+    const response = NextResponse.json(options);
+    // Temporary challenge for admin login
+    response.cookies.set('admin_login_challenge', options.challenge, { 
+      httpOnly: true, secure: true, sameSite: 'strict', maxAge: 600 
+    });
+    
+    return response;
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
