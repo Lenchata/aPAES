@@ -195,7 +195,7 @@ export default function Home() {
             <img fetchPriority="high" src="/apaes.svg" alt="logo" className="w-8 h-8" />
             <span className="text-xl text-white font-bowlby tracking-wider" style={{ WebkitTextStroke: "1px black" }}>aPAES</span>
           </div>
-          <button onClick={toggleDark} className="text-white p-2 rounded-lg bg-white/10">
+          <button aria-label="Modo oscuro" onClick={toggleDark} className="text-white p-2 rounded-lg bg-white/10">
             {dark ? <Sun size={20} /> : <Moon size={20} />}
           </button>
         </header>
