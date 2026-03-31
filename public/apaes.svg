@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg width="686" height="696" viewBox="0 0 686 696" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <g id="group_1">
+      <path d="M176.5 176.5C176.5 176.5 301.304 301.304 301.304 301.304C334.405 268.204 353 223.311 353 176.5C353 176.5 176.5 176.5 176.5 176.5Z" fill="#FFFFFF" fill-rule="evenodd" stroke-width="6" stroke="#000000" />
+      <path d="M176.5 176.5C176.5 176.5 301.304 301.304 301.304 301.304C334.405 268.204 353 223.311 353 176.5C353 176.5 176.5 176.5 176.5 176.5Z" fill="#FFFFFF" fill-rule="evenodd" stroke-width="6" stroke="#000000" />
+      <path d="M176.5 176.5C176.5 176.5 301.304 301.304 301.304 301.304C334.405 268.204 353 223.311 353 176.5C353 176.5 176.5 176.5 176.5 176.5Z" fill="#FFFFFF" fill-rule="evenodd" stroke-width="6" stroke="#000000" />
+      <use p4:href="#group_1" clip-path="url(#clip_path_3)" filter="url(#filter_4)" xmlns:p4="http://www.w3.org/1999/xlink" />
+      <path d="M176.5 176.5C176.5 176.5 301.305 301.305 301.305 301.305C334.405 268.205 353.001 223.311 353.001 176.5C353.001 176.5 176.5 176.5 176.5 176.5Z" fill="#FFFFFF" fill-rule="evenodd" stroke-width="6" stroke="#000000" transform="matrix(-1 -0 0 -1 530 540)" />
+      <path d="M176.5 176.5C176.5 176.5 301.305 301.305 301.305 301.305C334.405 268.205 353.001 223.311 353.001 176.5C353.001 176.5 176.5 176.5 176.5 176.5Z" fill="#FFFFFF" fill-rule="evenodd" stroke-width="6" stroke="#000000" />
+    </g>
+    <path id="path_2" d="M176.5 176.5C176.5 176.5 301.304 301.304 301.304 301.304C334.405 268.204 353 223.311 353 176.5C353 176.5 176.5 176.5 176.5 176.5Z" />
+    <clipPath id="clip_path_3">
+      <use p4:href="#path_2" xmlns:p4="http://www.w3.org/1999/xlink" />
+    </clipPath>
+    <filter color-interpolation-filters="sRGB" x="-351" y="-351" width="353" height="353" id="filter_4">
+      <feFlood flood-opacity="0" result="BackgroundImageFix_1" />
+      <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix_1" result="Shape_2" />
+      <feGaussianBlur stdDeviation="25" />
+    </filter>
+    <path id="path_5" d="M176.5 176.5C176.5 176.5 301.305 301.305 301.305 301.305C334.405 268.205 353.001 223.311 353.001 176.5C353.001 176.5 176.5 176.5 176.5 176.5Z" />
+    <clipPath id="clip_path_6" transform="matrix(-1 -0 0 -1 530 540)">
+      <use p4:href="#path_5" xmlns:p4="http://www.w3.org/1999/xlink" />
+    </clipPath>
+    <filter color-interpolation-filters="sRGB" x="-351" y="-351" width="353" height="353" id="filter_7">
+      <feFlood flood-opacity="0" result="BackgroundImageFix_1" />
+      <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix_1" result="Shape_2" />
+      <feGaussianBlur stdDeviation="25" />
+    </filter>
+  </defs>
+  <g transform="translate(78 78)">
+    <path d="M176.5 176.5C176.5 176.5 301.304 301.304 301.304 301.304C334.405 268.204 353 223.311 353 176.5C353 176.5 176.5 176.5 176.5 176.5Z" fill="#FFFFFF" fill-rule="evenodd" stroke-width="6" stroke="#000000" />
+    <use p3:href="#group_1" clip-path="url(#clip_path_3)" filter="url(#filter_4)" xmlns:p3="http://www.w3.org/1999/xlink" />
+    <path d="M176.5 176.5C176.5 176.5 301.305 301.305 301.305 301.305C334.405 268.205 353.001 223.311 353.001 176.5C353.001 176.5 176.5 176.5 176.5 176.5Z" fill="#FFFFFF" fill-rule="evenodd" stroke-width="6" stroke="#000000" transform="matrix(-1 -0 0 -1 530 540)" />
+    <use p3:href="#group_1" clip-path="url(#clip_path_6)" filter="url(#filter_7)" xmlns:p3="http://www.w3.org/1999/xlink" />
+  </g>
+</svg>
