@@ -198,8 +198,8 @@ export default function Home() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 title={tab.id}
-                className={`w-full py-2.5 px-3 flex items-center ${isMenuOpen ? "justify-start" : "justify-center"} gap-3 text-lg font-extrabold border-[3px] border-black rounded transition-all shadow-[3px_3px_0px_#000] text-white
-                  ${activeTab === tab.id ? "bg-[#6c40d6] translate-y-0.5 shadow-[1px_1px_0px_#000]" : "bg-[#5b3eb8] hover:-translate-y-0.5 hover:bg-[#6c40d6]"}`}
+                className={`w-full py-2.5 px-3 flex items-center ${isMenuOpen ? "justify-start" : "justify-center"} gap-3 text-lg font-extrabold border-[3px] border-black rounded transition-all text-white
+                  ${activeTab === tab.id ? "bg-[#6c40d6] translate-y-0.5" : "bg-[#5b3eb8] hover:-translate-y-0.5 hover:bg-[#6c40d6]"}`}
               >
                 <Icon size={22} strokeWidth={2.5} className="shrink-0" />
                 {isMenuOpen && <span>{tab.id}</span>}
@@ -238,7 +238,7 @@ export default function Home() {
 // ────────────────────────────────────────────────────────────────────────────
 function Card({ children, dark, className = "" }: { children: React.ReactNode; dark: boolean; className?: string }) {
   return (
-    <div className={`border-[4px] rounded-2xl p-6 ${dark ? "bg-[#12112a] border-white/10 -[6px_6px_0px_shadowrgba(255,255,255,0.03)]" : "bg-white border-black"} ${className}`}>
+    <div className={`border-[4px] rounded-2xl p-6 ${dark ? "bg-[#12112a] border-white/10" : "bg-white border-black"} ${className}`}>
       {children}
     </div>
   );
@@ -246,7 +246,7 @@ function Card({ children, dark, className = "" }: { children: React.ReactNode; d
 
 function SectionCard({ title, children, dark }: { title: string; children?: React.ReactNode; dark: boolean }) {
   return (
-    <div className={`min-h-[140px] rounded-xl p-4 border-[3px] ${dark ? "bg-[#2a1a5e] border-white/10" : "bg-[#6136af] border-black"} shadow-[5px_5px_0px_rgba(0,0,0,0.1)]`}>
+    <div className={`min-h-[140px] rounded-xl p-4 border-[3px] ${dark ? "bg-[#2a1a5e] border-white/10" : "bg-[#6136af] border-black"}`}>
       <h2 className="text-[1.1rem] text-white font-extrabold tracking-tight mb-3 uppercase" style={{ WebkitTextStroke: "1px rgba(0,0,0,0.4)", textShadow: "1.5px 1.5px 0 rgba(0,0,0,0.3)" }}>{title}</h2>
       {children}
     </div>
@@ -438,9 +438,9 @@ function PracticarTab({ savedExams, sections, onStartExam, onAddClick, onAddSect
               setDragOverSection(null);
             }}
             className={`rounded-2xl border-[3px] transition-all duration-200 ${dark
-              ? isOver ? "border-indigo-400 bg-[#1e1245] shadow-[0_0_24px_rgba(99,102,241,0.35)]" : "bg-[#2a1a5e] border-white/10"
+              ? isOver ? "border-indigo-400 bg-[#1e1245]" : "bg-[#2a1a5e] border-white/10"
               : isOver ? "border-[#6c40d6] bg-[#ede8f8]" : "bg-[#6136af] border-black"
-              } shadow-[5px_5px_0px_rgba(0,0,0,0.1)]`}
+              }`}
           >
             {/* Section header */}
             <div className={`flex items-center justify-between px-5 py-3 border-b-[2px] ${dark ? "border-white/10" : "border-black/20"}`}>
@@ -513,7 +513,7 @@ function PracticarTab({ savedExams, sections, onStartExam, onAddClick, onAddSect
                     onPointerMove={() => { didMove.current = true; if (longPressRef.current) { clearTimeout(longPressRef.current); longPressRef.current = null; } }}
                     onPointerUp={() => { if (longPressRef.current) { clearTimeout(longPressRef.current); longPressRef.current = null; } }}
                     onPointerCancel={() => { if (longPressRef.current) { clearTimeout(longPressRef.current); longPressRef.current = null; } }}
-                    className={`group relative aspect-[3/4] bg-[#e3f4e3] border-[3px] border-black rounded-lg p-3 flex flex-col cursor-grab active:cursor-grabbing transition-all hover:-translate-y-1 shadow-[4px_4px_0px_rgba(0,0,0,0.3)] overflow-hidden select-none ${draggingId === exam.id ? "opacity-30 scale-95 shadow-none" : ""}`}
+                    className={`group relative aspect-[3/4] bg-[#e3f4e3] border-[3px] border-black rounded-lg p-3 flex flex-col cursor-grab active:cursor-grabbing transition-all hover:-translate-y-1 overflow-hidden select-none ${draggingId === exam.id ? "opacity-30 scale-95" : ""}`}
                   >
                     {/* Status badge */}
                     {exam.status && exam.status !== "none" && (
@@ -553,9 +553,9 @@ function PracticarTab({ savedExams, sections, onStartExam, onAddClick, onAddSect
               {section.id === "default" && (
                 <div
                   onClick={onAddClick}
-                  className={`aspect-[3/4] border-[3px] border-dashed rounded-lg flex flex-col justify-center items-center cursor-pointer transition-transform hover:-translate-y-1 ${dark ? "bg-white/5 border-white/20 hover:bg-white/10" : "bg-white border-black hover:bg-[#f0edf9]"} shadow-[4px_4px_0px_rgba(0,0,0,0.15)]`}
+                  className={`aspect-[3/4] border-[3px] border-dashed rounded-lg flex flex-col justify-center items-center cursor-pointer transition-transform hover:-translate-y-1 ${dark ? "bg-white/5 border-white/20 hover:bg-white/10" : "bg-white border-black hover:bg-[#f0edf9]"}`}
                 >
-                  <div className="w-14 h-14 bg-[#6c40d6] rounded-full border-[3px] border-black flex items-center justify-center text-white shadow-[2px_2px_0px_#000]">
+                  <div className="w-14 h-14 bg-[#6c40d6] rounded-full border-[3px] border-black flex items-center justify-center text-white">
                     <Plus size={28} strokeWidth={4} />
                   </div>
                   <span className={`font-extrabold text-[11px] text-center mt-2 ${dark ? "text-slate-300" : "text-black"}`}>Añadir Ensayo</span>
@@ -584,7 +584,7 @@ function PracticarTab({ savedExams, sections, onStartExam, onAddClick, onAddSect
             onKeyDown={e => { if (e.key === "Enter") handleAddSection(); if (e.key === "Escape") { setShowAddSection(false); setNewSectionName(""); } }}
             autoFocus
           />
-          <button onClick={handleAddSection} className="px-4 py-2 bg-[#6c40d6] text-white font-black text-sm border-[3px] border-black rounded-lg shadow-[2px_2px_0_#000] hover:bg-[#5b3eb8] transition-all">
+          <button onClick={handleAddSection} className="px-4 py-2 bg-[#6c40d6] text-white font-black text-sm border-[3px] border-black rounded-lg hover:bg-[#5b3eb8] transition-all">
             Crear
           </button>
           <button onClick={() => { setShowAddSection(false); setNewSectionName(""); }} className={`px-3 py-2 font-bold text-sm border-2 rounded-lg ${dark ? "border-white/20 text-slate-400 hover:bg-white/10" : "border-black text-black hover:bg-black/5"}`}>
@@ -594,7 +594,7 @@ function PracticarTab({ savedExams, sections, onStartExam, onAddClick, onAddSect
       ) : (
         <button
           onClick={() => setShowAddSection(true)}
-          className={`flex items-center gap-2 px-5 py-3 font-extrabold text-sm border-[3px] rounded-xl transition-all hover:-translate-y-0.5 shadow-[3px_3px_0_rgba(0,0,0,0.2)] w-full justify-center ${dark ? "bg-white/5 border-white/20 text-slate-200 hover:bg-white/10" : "bg-white border-black text-black hover:bg-[#f0edf9]"}`}
+          className={`flex items-center gap-2 px-5 py-3 font-extrabold text-sm border-[3px] rounded-xl transition-all hover:-translate-y-0.5 w-full justify-center ${dark ? "bg-white/5 border-white/20 text-slate-200 hover:bg-white/10" : "bg-white border-black text-black hover:bg-[#f0edf9]"}`}
         >
           <Plus size={18} strokeWidth={3} />
           Nueva Sección
@@ -613,7 +613,7 @@ function PracticarTab({ savedExams, sections, onStartExam, onAddClick, onAddSect
             <div className="fixed inset-0 z-40" onClick={closeCtxMenu} onContextMenu={e => { e.preventDefault(); closeCtxMenu(); }} />
             {/* menu */}
             <div
-              className={`fixed z-50 min-w-[180px] rounded-xl border-[3px] shadow-[6px_6px_0px_rgba(0,0,0,0.35)] overflow-hidden text-sm font-bold ${dark ? "bg-[#1a0f38] border-white/20 text-slate-100" : "bg-white border-black text-black"
+              className={`fixed z-50 min-w-[180px] rounded-xl border-[3px] overflow-hidden text-sm font-bold ${dark ? "bg-[#1a0f38] border-white/20 text-slate-100" : "bg-white border-black text-black"
                 }`}
               style={{ top: Math.min(ctxMenu.y, window.innerHeight - 200), left: Math.min(ctxMenu.x, window.innerWidth - 200) }}
             >
@@ -681,7 +681,7 @@ function ProgresoTab({ goals, results, onUpdateGoals, onDeleteResult, dark }: {
   const tx = dark ? "text-slate-100" : "text-black";
   const sub = dark ? "text-slate-400" : "text-slate-600";
   const inputCls = `p-2.5 border-2 rounded-lg font-bold text-sm w-32 ${dark ? "bg-white/10 border-white/20 text-slate-100" : "bg-[#f4f2f9] border-black text-black"}`;
-  const cardCls = `border-[4px] rounded-2xl p-6 flex flex-col gap-4 ${dark ? "bg-[#12112a] border-white/10" : "bg-white border-black shadow-[6px_6px_0px_rgba(0,0,0,0.1)]"}`;
+  const cardCls = `border-[4px] rounded-2xl p-6 flex flex-col gap-4 ${dark ? "bg-[#12112a] border-white/10" : "bg-white border-black"}`;
 
   const saveGoals = () => { onUpdateGoals(localGoals); setSaved(true); setTimeout(() => setSaved(false), 2000); };
 
@@ -735,7 +735,7 @@ function ProgresoTab({ goals, results, onUpdateGoals, onDeleteResult, dark }: {
               return (
                 <button key={p.id} onClick={() => togglePrueba(p.id)}
                   className={`px-3 py-1.5 rounded-lg border-[3px] font-black text-sm transition-all
-                    ${sel ? "bg-[#6c40d6] border-[#6c40d6] text-white shadow-[2px_2px_0px_rgba(0,0,0,0.3)]"
+                    ${sel ? "bg-[#6c40d6] border-[#6c40d6] text-white"
                       : dark ? "bg-white/5 border-white/20 text-slate-300 hover:border-indigo-400"
                         : "bg-[#f4f2f9] border-black text-black hover:bg-[#e2deef]"}`}
                 >
@@ -767,7 +767,7 @@ function ProgresoTab({ goals, results, onUpdateGoals, onDeleteResult, dark }: {
         )}
 
         <button onClick={saveGoals}
-          className={`self-start px-6 py-2 text-sm font-black border-[3px] rounded-lg shadow-[3px_3px_0px_rgba(0,0,0,0.3)] transition-all active:translate-y-0.5 active:shadow-none
+          className={`self-start px-6 py-2 text-sm font-black border-[3px] rounded-lg transition-all active:translate-y-0.5 active:shadow-none
             ${saved ? "bg-emerald-500 border-emerald-700 text-white" : "bg-[#298d5c] border-black text-white hover:bg-[#1a6640]"}`}
         >
           {saved ? "✓ Guardado!" : "Guardar Metas"}
@@ -906,7 +906,7 @@ function ConfiguracionTab({ onSaveExam, dark }: { onSaveExam: (meta: any, d: any
   const [saved, setSaved] = useState(false);
 
   const sub = dark ? "text-slate-400" : "text-slate-600";
-  const cardCls = `border-[4px] rounded-2xl p-8 flex flex-col gap-4 ${dark ? "bg-[#12112a] border-white/10" : "bg-white border-black shadow-[6px_6px_0px_rgba(0,0,0,0.12)]"}`;
+  const cardCls = `border-[4px] rounded-2xl p-8 flex flex-col gap-4 ${dark ? "bg-[#12112a] border-white/10" : "bg-white border-black"}`;
 
   const handleSave = () => {
     try {
@@ -958,7 +958,7 @@ function ConfiguracionTab({ onSaveExam, dark }: { onSaveExam: (meta: any, d: any
           />
           <button
             onClick={loadExample}
-            className={`absolute top-4 right-6 text-xs font-bold px-3 py-1 rounded border-2 shadow-[2px_2px_0px_rgba(0,0,0,0.2)] transition-all active:translate-y-0.5
+            className={`absolute top-4 right-6 text-xs font-bold px-3 py-1 rounded border-2 transition-all active:translate-y-0.5
               ${dark ? "bg-white/10 border-white/20 text-slate-200 hover:bg-white/20" : "bg-[#e2deef] border-black hover:bg-[#d0c6eb]"}`}
           >
             Cargar Ejemplo
@@ -969,7 +969,7 @@ function ConfiguracionTab({ onSaveExam, dark }: { onSaveExam: (meta: any, d: any
 
         <button
           onClick={handleSave}
-          className={`flex items-center gap-2 px-8 py-3 text-xl font-black border-[4px] border-black rounded-xl shadow-[5px_5px_0px_rgba(0,0,0,0.3)] transition-all active:translate-y-1 active:shadow-none self-start mt-2
+          className={`flex items-center gap-2 px-8 py-3 text-xl font-black border-[4px] border-black rounded-xl transition-all active:translate-y-1 active:shadow-none self-start mt-2
             ${saved ? "bg-emerald-500 text-white" : "bg-[#6c40d6] hover:bg-[#5b3eb8] text-white"}`}
         >
           <Plus size={24} strokeWidth={3} /> {saved ? "¡Guardado en Mis Ensayos!" : "Guardar en Mis Ensayos"}
