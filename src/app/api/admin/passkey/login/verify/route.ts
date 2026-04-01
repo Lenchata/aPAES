@@ -39,6 +39,7 @@ export async function POST(req: NextRequest) {
         counter: adminCredential.counter,
         transports: adminCredential.transports,
       },
+      requireUserVerification: false,
     });
 
     if (verification.verified) {

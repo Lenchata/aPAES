@@ -21,6 +21,7 @@ export async function POST(req: NextRequest) {
       expectedChallenge: user.current_challenge,
       expectedOrigin: origin,
       expectedRPID: rpID,
+      requireUserVerification: false,
     });
 
     if (verification.verified && verification.registrationInfo) {
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
       const { id, publicKey, counter } = credential;
 
       // In the database we store ID as a string, typically base64url encoded
-      const credentialIdStr = Buffer.from(id).toString('base64url');
+      const credentialIdStr = id;
 
       saveCredential(userId, {
         id: credentialIdStr,
@@ -52,6 +53,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Verification failed' }, { status: 400 });
     }
   } catch (err: any) {
+    console.error('Registration Verify Error:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

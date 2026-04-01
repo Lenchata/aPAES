@@ -18,6 +18,7 @@ export async function POST(req: NextRequest) {
       expectedChallenge: admin.current_challenge,
       expectedOrigin: origin,
       expectedRPID: rpID,
+      requireUserVerification: false,
     });
 
     if (verification.verified && verification.registrationInfo) {
@@ -25,7 +26,7 @@ export async function POST(req: NextRequest) {
       const { id, publicKey, counter } = credential;
 
       saveAdminCredential(adminId, {
-        id: Buffer.from(id).toString('base64url'),
+        id,
         publicKey,
         counter,
         transports: body.response?.transports || [],
