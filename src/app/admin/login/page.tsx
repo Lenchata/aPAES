@@ -43,7 +43,7 @@ export default function AdminLoginPage() {
       const options = await resOptions.json();
       if (options.error) throw new Error(options.error);
 
-      const asseResp = await startAuthentication(options);
+      const asseResp = await startAuthentication({ optionsJSON: options });
       
       const resVerify = await fetch('/api/admin/passkey/login/verify', {
         method: 'POST',

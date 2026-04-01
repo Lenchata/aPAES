@@ -62,7 +62,7 @@ export default function AdminDashboard() {
       const options = await resOptions.json();
       if (options.error) throw new Error(options.error);
 
-      const attResp = await startRegistration(options);
+      const attResp = await startRegistration({ optionsJSON: options });
       const resVerify = await fetch('/api/admin/passkey/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

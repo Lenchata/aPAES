@@ -39,6 +39,7 @@ export async function POST(req: NextRequest) {
         counter: userCredential.counter,
         transports: userCredential.transports as any,
       },
+      requireUserVerification: false,
     });
 
     if (verification.verified) {
@@ -53,6 +54,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Verification failed' }, { status: 400 });
     }
   } catch (err: any) {
+    console.error('Login Verify Error:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

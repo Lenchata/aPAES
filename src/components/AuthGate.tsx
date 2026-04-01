@@ -45,7 +45,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
       const options = await resOptions.json();
       if (options.error) throw new Error(options.error);
 
-      const attResp = await startRegistration(options);
+      const attResp = await startRegistration({ optionsJSON: options });
       
       const resVerify = await fetch('/api/auth/registration/verify', {
         method: 'POST',
@@ -72,7 +72,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
       const options = await resOptions.json();
       if (options.error) throw new Error(options.error);
 
-      const asseResp = await startAuthentication(options);
+      const asseResp = await startAuthentication({ optionsJSON: options });
       
       const resVerify = await fetch('/api/auth/login/verify', {
         method: 'POST',
