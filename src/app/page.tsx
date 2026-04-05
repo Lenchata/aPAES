@@ -48,18 +48,6 @@ const DEFAULT_GOALS: Goals = {
   puntajesPorPrueba: { m1: 750, m2: 700, cl: 800, hist: 650, cien: 680 },
 };
 
-// ────────────────────────────────────────────────────────────────────────────
-// Modo nigga
-// ────────────────────────────────────────────────────────────────────────────
-function useTheme() {
-  const [dark, setDark] = useState(false);
-  useEffect(() => {
-    if (localStorage.getItem("apaes_dark") === "1") setDark(true);
-  }, []);
-  const toggle = () => setDark(d => { localStorage.setItem("apaes_dark", d ? "0" : "1"); return !d; });
-  return { dark, toggle };
-}
-
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -83,90 +71,129 @@ export default function Home() {
   const [results, setResults] = useState<ExamResult[]>([]);
   const [goals, setGoals] = useState<Goals>(DEFAULT_GOALS);
   const [sections, setSections] = useState<Section[]>([{ id: "default", name: "Sin categoría" }]);
-  const { dark, toggle: toggleDark } = useTheme();
+  const [dark, setDark] = useState(false);
   const isMobile = useIsMobile();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
-  // Cargar localstorage y globales
+  const sync = (patch: any) => {
+    // Autosave both to local and server for robustness
+    const fullData = { savedExams, results, goals, sections, dark, ...patch };
+    fetch('/api/user/data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(fullData)
+    }).catch(console.error);
+  };
+
+  const toggleDark = () => {
+    const next = !dark;
+    setDark(next);
+    sync({ dark: next });
+  };
+
+  // Cargar datos del server y globales
   useEffect(() => {
-    try { const v = localStorage.getItem("apaes_exams"); if (v) setSavedExams(JSON.parse(v)); } catch (_) { }
-    try { const v = localStorage.getItem("apaes_results"); if (v) setResults(JSON.parse(v)); } catch (_) { }
-    try { const v = localStorage.getItem("apaes_goals"); if (v) setGoals({ ...DEFAULT_GOALS, ...JSON.parse(v) }); } catch (_) { }
-    try { const v = localStorage.getItem("apaes_sections"); if (v) setSections(JSON.parse(v)); } catch (_) { }
-    
-    // Cargar ensayos globales del server
+    fetch('/api/user/data')
+      .then(r => r.json())
+      .then(data => {
+        if (data.savedExams) setSavedExams(data.savedExams);
+        if (data.results) setResults(data.results);
+        if (data.goals) setGoals(data.goals);
+        if (data.sections) setSections(data.sections);
+        if (data.dark !== undefined) setDark(data.dark);
+      })
+      .catch(console.error);
+
     fetch('/api/global-exams')
       .then(r => r.json())
       .then(data => setGlobalExams(Array.isArray(data) ? data : []))
       .catch(console.error);
   }, []);
 
+  // Keyboard Shortcuts
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) return;
+
+      switch (e.key.toLowerCase()) {
+        case "i": setActiveTab("Inicio"); break;
+        case "p": setActiveTab("Practicar"); break;
+        case "g": setActiveTab("Progreso"); break;
+        case "c": setActiveTab("Configuracion"); break;
+        case "m": setIsMenuOpen(o => !o); break;
+        case "d": toggleDark(); break;
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [dark]);
+
   const allExams = [...globalExams, ...savedExams];
 
   const saveExam = (metadata: any, data: any) => {
     const updated = [...savedExams, { metadata, data, id: Date.now(), sectionId: "default" }];
     setSavedExams(updated);
-    localStorage.setItem("apaes_exams", JSON.stringify(updated));
+    sync({ savedExams: updated });
     setActiveTab("Practicar");
   };
 
   const saveResult = (r: ExamResult) => {
     const updated = [...results, r];
     setResults(updated);
-    localStorage.setItem("apaes_results", JSON.stringify(updated));
+    sync({ results: updated });
   };
 
   const deleteResult = (id: number) => {
     const updated = results.filter(r => r.id !== id);
     setResults(updated);
-    localStorage.setItem("apaes_results", JSON.stringify(updated));
+    sync({ results: updated });
   };
 
   const updateGoals = (g: Goals) => {
     setGoals(g);
-    localStorage.setItem("apaes_goals", JSON.stringify(g));
+    sync({ goals: g });
   };
 
   const addSection = (name: string) => {
     const s: Section = { id: `sec_${Date.now()}`, name };
     const updated = [...sections, s];
     setSections(updated);
-    localStorage.setItem("apaes_sections", JSON.stringify(updated));
+    sync({ sections: updated });
   };
 
   const deleteSection = (id: string) => {
     const updatedExams = savedExams.map(e => e.sectionId === id ? { ...e, sectionId: "default" } : e);
-    setSavedExams(updatedExams);
-    localStorage.setItem("apaes_exams", JSON.stringify(updatedExams));
     const updatedSections = sections.filter(s => s.id !== id);
+    setSavedExams(updatedExams);
     setSections(updatedSections);
-    localStorage.setItem("apaes_sections", JSON.stringify(updatedSections));
+    sync({ savedExams: updatedExams, sections: updatedSections });
   };
 
   const renameSection = (id: string, name: string) => {
     const updated = sections.map(s => s.id === id ? { ...s, name } : s);
     setSections(updated);
-    localStorage.setItem("apaes_sections", JSON.stringify(updated));
+    sync({ sections: updated });
   };
 
   const moveExam = (examId: number, sectionId: string) => {
     const updated = savedExams.map(e => e.id === examId ? { ...e, sectionId } : e);
     setSavedExams(updated);
-    localStorage.setItem("apaes_exams", JSON.stringify(updated));
+    sync({ savedExams: updated });
   };
 
   const deleteExam = (examId: number) => {
     const updated = savedExams.filter(e => e.id !== examId);
     setSavedExams(updated);
-    localStorage.setItem("apaes_exams", JSON.stringify(updated));
+    sync({ savedExams: updated });
   };
 
   const updateExam = (examId: number, patch: Record<string, any>) => {
     const updated = savedExams.map(e => e.id === examId ? { ...e, ...patch } : e);
     setSavedExams(updated);
-    localStorage.setItem("apaes_exams", JSON.stringify(updated));
+    sync({ savedExams: updated });
   };
 
   if (activeExam) {
