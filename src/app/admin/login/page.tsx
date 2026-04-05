@@ -44,7 +44,7 @@ export default function AdminLoginPage() {
       if (options.error) throw new Error(options.error);
 
       const asseResp = await startAuthentication({ optionsJSON: options });
-      
+
       const resVerify = await fetch('/api/admin/passkey/login/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -53,7 +53,7 @@ export default function AdminLoginPage() {
 
       const verifyData = await resVerify.json();
       if (verifyData.error) throw new Error(verifyData.error);
-      
+
       router.push('/admin');
     } catch (err: any) {
       if (err.name !== 'NotAllowedError') {
@@ -128,7 +128,7 @@ export default function AdminLoginPage() {
         </button>
 
         <p className="mt-8 text-[10px] text-center font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
-          🔐 Acceso restringido a administradores.<br/>La clave normal se desactiva al añadir una Passkey.
+          Acceso restringido a administradores!<br />La clave normal se desactiva al añadir una Passkey.
         </p>
       </div>
     </div>

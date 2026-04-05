@@ -41,12 +41,12 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
         method: 'POST',
         body: JSON.stringify({ username: usernameInput || `Usuario-${Math.floor(Math.random() * 10000)}` }),
       });
-      
+
       const options = await resOptions.json();
       if (options.error) throw new Error(options.error);
 
       const attResp = await startRegistration({ optionsJSON: options });
-      
+
       const resVerify = await fetch('/api/auth/registration/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -55,7 +55,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
 
       const verifyData = await resVerify.json();
       if (verifyData.error) throw new Error(verifyData.error);
-      
+
       await checkSession();
     } catch (err: any) {
       setAuthError(err.message);
@@ -73,7 +73,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
       if (options.error) throw new Error(options.error);
 
       const asseResp = await startAuthentication({ optionsJSON: options });
-      
+
       const resVerify = await fetch('/api/auth/login/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -125,7 +125,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
               Bienvenido a <span className="text-[#6c40d6]">aPAES</span>
             </h1>
             <p className="text-slate-500 font-bold text-center mt-2">
-              Tu entrenamiento inteligente, ahora con Passkeys.
+              Estudia o muere, gordo.
             </p>
           </div>
 
