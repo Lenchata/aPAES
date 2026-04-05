@@ -74,6 +74,19 @@ export function saveCredential(userId: string, credential: UserCredential) {
   );
 }
 
+export function getUserData(userId: string): any {
+  const row = db.prepare('SELECT data FROM user_data WHERE user_id = ?').get(userId) as any;
+  return row ? JSON.parse(row.data) : null;
+}
+
+export function saveUserData(userId: string, data: any) {
+  db.prepare(`
+    INSERT INTO user_data (user_id, data, updated_at)
+    VALUES (?, ?, CURRENT_TIMESTAMP)
+    ON CONFLICT(user_id) DO UPDATE SET data = EXCLUDED.data, updated_at = CURRENT_TIMESTAMP
+  `).run(userId, JSON.stringify(data));
+}
+
 // ────────────────────────────────────────────────────────────────────────────
 // Admins
 // ────────────────────────────────────────────────────────────────────────────
@@ -101,16 +114,40 @@ export function getAdminCredentials(id: string) {
 }
 
 export function saveAdminCredential(adminId: string, credential: any) {
-  db.prepare(`
-    INSERT INTO admin_credentials (id, admin_id, public_key, counter, transports)
-    VALUES (?, ?, ?, ?, ?)
-  `).run(
-    credential.id,
-    adminId,
-    Buffer.from(credential.publicKey),
-    credential.counter,
-    JSON.stringify(credential.transports)
-  );
+  const transaction = db.transaction(() => {
+    db.prepare(`
+      INSERT INTO admin_credentials (id, admin_id, public_key, counter, transports)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(
+      credential.id,
+      adminId,
+      Buffer.from(credential.publicKey),
+      credential.counter,
+      JSON.stringify(credential.transports)
+    );
+
+    // Deactivate normal password for admin
+    db.prepare('UPDATE admins SET password_hash = NULL WHERE id = ?').run(adminId);
+  });
+  transaction();
+}
+
+export function getAllUsers() {
+  return db.prepare('SELECT id, username FROM users').all() as any[];
+}
+
+export function getAllAdmins() {
+  return db.prepare('SELECT id, username, (password_hash IS NOT NULL) as has_password FROM admins').all() as any[];
+}
+
+export function deleteUser(id: string) {
+  db.prepare('DELETE FROM credentials WHERE user_id = ?').run(id);
+  db.prepare('DELETE FROM users WHERE id = ?').run(id);
+}
+
+export function deleteAdmin(id: string) {
+  db.prepare('DELETE FROM admin_credentials WHERE admin_id = ?').run(id);
+  db.prepare('DELETE FROM admins WHERE id = ?').run(id);
 }
 
 // ────────────────────────────────────────────────────────────────────────────

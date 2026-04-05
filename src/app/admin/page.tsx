@@ -1,16 +1,23 @@
-'use client';
+"use client";
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  Globe, Plus, Trash2, Fingerprint, LogOut, 
-  Loader2, CheckCircle, Package, AlertCircle, Save
+import {
+  Globe, Plus, Trash2, Fingerprint, LogOut,
+  Loader2, CheckCircle, Package, AlertCircle, Save,
+  Users, ShieldCheck, UserMinus, ShieldAlert
 } from 'lucide-react';
 import { startRegistration } from '@simplewebauthn/browser';
 
+// ────────────────────────────────────────────────────────────────────────────
+// Panel de Administración (Renovado)
+// ────────────────────────────────────────────────────────────────────────────
+
 export default function AdminDashboard() {
-  const [session, setSession] = useState<{ username: string } | null>(null);
+  const [activeTab, setActiveTab] = useState<'exams' | 'users'>('exams');
   const [globalExams, setGlobalExams] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
+  const [admins, setAdmins] = useState<any[]>([]);
   const [jsonInput, setJsonInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -18,35 +25,27 @@ export default function AdminDashboard() {
   const router = useRouter();
 
   useEffect(() => {
-    fetchSession();
-    fetchGlobalExams();
+    fetchSessionAndInitialData();
   }, []);
 
-  const fetchSession = async () => {
+  const fetchSessionAndInitialData = async () => {
     try {
-      // Reuse user session check but check admin cookie effectively
-      // Or better, a dedicated admin session check
-      const res = await fetch('/api/admin/global-exams'); // If this returns 401, we are not logged in as admin
+      const res = await fetch('/api/admin/global-exams');
       if (res.status === 401) {
         router.push('/admin/login');
         return;
       }
-      const data = await res.json();
-      setSession({ username: 'Admin' }); // Simplified
+      const exams = await res.json();
+      setGlobalExams(exams);
+
+      const resUsers = await fetch('/api/admin/users');
+      const resAdmins = await fetch('/api/admin/admins');
+      if (resUsers.ok) setUsers(await resUsers.json());
+      if (resAdmins.ok) setAdmins(await resAdmins.json());
+
+      setLoading(false);
     } catch {
       router.push('/admin/login');
-    }
-  };
-
-  const fetchGlobalExams = async () => {
-    try {
-      const res = await fetch('/api/admin/global-exams');
-      if (res.ok) {
-        const data = await res.json();
-        setGlobalExams(data);
-      }
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -72,9 +71,14 @@ export default function AdminDashboard() {
       const data = await resVerify.json();
       if (data.error) throw new Error(data.error);
 
-      showMsg('Passkey añadida correctamente', 'success');
+      showMsg('Passkey añadida. La clave normal ha sido desactivada.', 'success');
+      // Refresh admins to show status
+      const resAd = await fetch('/api/admin/admins');
+      if (resAd.ok) setAdmins(await resAd.json());
     } catch (err: any) {
-      showMsg(err.message, 'error');
+      if (err.name !== 'NotAllowedError') {
+        showMsg(err.message, 'error');
+      }
     } finally {
       setActionLoading(false);
     }
@@ -98,17 +102,18 @@ export default function AdminDashboard() {
       const res = await fetch('/api/admin/global-exams', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           metadata: parsed.metadata || { asignatura: 'Ensayo Global' },
-          data: formatted 
+          data: formatted
         }),
       });
 
       if (!res.ok) throw new Error('Error al subir el ensayo');
 
-      showMsg('Ensayo global publicado', 'success');
+      showMsg('Ensayo global publicado correctamente', 'success');
       setJsonInput('');
-      fetchGlobalExams();
+      const resEx = await fetch('/api/admin/global-exams');
+      setGlobalExams(await resEx.json());
     } catch (err: any) {
       showMsg(err.message, 'error');
     } finally {
@@ -117,144 +122,210 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteGlobal = async (id: number) => {
-    if (!confirm('¿Eliminar este ensayo global para todos los usuarios?')) return;
+    if (!confirm('¿Eliminar este ensayo global?')) return;
     try {
       await fetch('/api/admin/global-exams', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id }),
       });
-      fetchGlobalExams();
+      setGlobalExams(prev => prev.filter(e => e.id !== id));
       showMsg('Ensayo eliminado', 'success');
     } catch (err: any) {
       showMsg(err.message, 'error');
     }
   };
 
+  const handleDeleteUser = async (id: string, isAdminSection: boolean) => {
+    if (!confirm('¿Eliminar permanentemente?')) return;
+    try {
+      const type = isAdminSection ? 'admins' : 'users';
+      const res = await fetch(`/api/admin/${type}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+      if (isAdminSection) setAdmins(prev => prev.filter(a => a.id !== id));
+      else setUsers(prev => prev.filter(u => u.id !== id));
+      showMsg('Registro eliminado', 'success');
+    } catch (err: any) {
+      showMsg(err.message, 'error');
+    }
+  };
+
   const handleLogout = async () => {
-    // Simple way to clear cookie if not using a dedicated logout API yet
-    // I already created /api/auth/session for users, let's create /api/admin/logout
-    await fetch('/api/auth/session', { method: 'DELETE' }); // This clears auth_user_id, but user might have auth_admin_id
-    // For now, let's just clear both or assume same mechanism
+    await fetch('/api/auth/session', { method: 'DELETE' });
     document.cookie = 'auth_admin_id=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
     router.push('/admin/login');
   };
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white"><Loader2 className="animate-spin" /></div>;
+    return <div className="min-h-screen flex items-center justify-center bg-[#ded9ed] text-[#351b69]"><Loader2 className="animate-spin w-12 h-12" /></div>;
   }
 
+  // Estilos compartidos con portal de usuario
+  const bg = "bg-[#ded9ed]";
+  const navBg = "bg-[#351b69]";
+  const cardCls = "bg-white border-[4px] border-black rounded-2xl p-6 shadow-[6px_6px_0_#000]";
+  const btnPrimary = "bg-[#6c40d6] text-white border-[3px] border-black rounded-xl font-black shadow-[4px_4px_0_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all";
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans p-6 md:p-12">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-12">
-          <div>
-            <h1 className="text-4xl font-black tracking-tighter uppercase flex items-center gap-3">
-              <Package size={40} className="text-[#6c40d6]" />
-              Panel de <span className="text-[#6c40d6]">Control</span>
-            </h1>
-            <p className="text-slate-400 font-bold uppercase text-xs tracking-widest mt-1">
-              Administración de Ensayos Globales
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={handleAddPasskey}
-              disabled={actionLoading}
-              className="flex items-center gap-2 bg-slate-800 border-2 border-black px-4 py-2 rounded-xl font-bold text-sm shadow-[4px_4px_0_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
-            >
-              <Fingerprint size={18} /> Añadir Passkey
-            </button>
-            <button 
-              onClick={handleLogout}
-              className="flex items-center gap-2 bg-rose-900/50 border-2 border-black px-4 py-2 rounded-xl font-bold text-sm shadow-[4px_4px_0_#000] text-rose-200 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
-            >
-              <LogOut size={18} /> Salir
-            </button>
-          </div>
-        </header>
+    <div className={`min-h-screen ${bg} text-black font-sans pb-20`}>
+      {/* Header Estilo aPAES */}
+      <header className={`h-20 ${navBg} border-b-[4px] border-black flex items-center justify-between px-8 shadow-lg sticky top-0 z-50`}>
+        <div className="flex items-center gap-3">
+          <img src="/apaes.svg" alt="logo" className="w-30 h-30" />
+          <h1 className="text-2xl text-white font-bowlby tracking-widest" style={{ WebkitTextStroke: "1px black", textShadow: "2px 2px 0 #000" }}>
+            aPAES <span className="text-[#6c40d6] opacity-90">ADMIN</span>
+          </h1>
+        </div>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={handleAddPasskey}
+            className="hidden md:flex items-center gap-2 bg-[#6c40d6] text-white px-4 py-2 rounded-lg font-black border-2 border-black shadow-[2px_2px_0_#000] hover:-translate-y-0.5 transition-all"
+          >
+            <Fingerprint size={18} /> Configurar Passkey
+          </button>
+          <button onClick={handleLogout} className="text-white/80 hover:text-white transition-colors">
+            <LogOut size={24} />
+          </button>
+        </div>
+      </header>
+
+      <main className="max-w-6xl mx-auto p-6 md:p-10">
+        {/* Pestañas */}
+        <div className="flex gap-4 mb-8">
+          <button
+            onClick={() => setActiveTab('exams')}
+            className={`px-6 py-3 rounded-xl border-[3px] border-black font-black uppercase tracking-tighter flex items-center gap-2 transition-all ${activeTab === 'exams' ? 'bg-[#6c40d6] text-white -translate-y-1 shadow-[4px_4px_0_#000]' : 'bg-white hover:bg-slate-50'}`}
+          >
+            <Package size={20} /> Ensayos
+          </button>
+          <button
+            onClick={() => setActiveTab('users')}
+            className={`px-6 py-3 rounded-xl border-[3px] border-black font-black uppercase tracking-tighter flex items-center gap-2 transition-all ${activeTab === 'users' ? 'bg-[#6c40d6] text-white -translate-y-1 shadow-[4px_4px_0_#000]' : 'bg-white hover:bg-slate-50'}`}
+          >
+            <Users size={20} /> Usuarios
+          </button>
+        </div>
 
         {message && (
-          <div className={`mb-8 p-4 rounded-xl border-2 flex items-center gap-3 font-bold animate-in fade-in slide-in-from-top-4 ${message.type === 'success' ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400' : 'bg-rose-500/10 border-rose-500 text-rose-400'}`}>
+          <div className={`mb-8 p-4 rounded-xl border-[3px] border-black flex items-center gap-3 font-black shadow-[4px_4px_0_#000] animate-in fade-in slide-in-from-top-4 ${message.type === 'success' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
             {message.type === 'success' ? <CheckCircle /> : <AlertCircle />}
             {message.text}
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* List Section */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-slate-900 border-[3px] border-black rounded-2xl p-6 shadow-[6px_6px_0_#000]">
-              <h2 className="text-xl font-black uppercase mb-6 flex items-center gap-2">
-                <Globe size={24} className="text-indigo-400" />
-                Ensayos Globales Activos
+        {/* Contenido Dinámico */}
+        {activeTab === 'exams' ? (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className={`lg:col-span-2 ${cardCls}`}>
+              <h2 className="text-2xl font-black uppercase mb-6 flex items-center gap-3 text-[#351b69]">
+                <Globe size={28} className="text-[#6c40d6]" /> Ensayos Activos
               </h2>
-
               {globalExams.length === 0 ? (
-                <div className="py-12 text-center text-slate-500 border-2 border-dashed border-slate-800 rounded-xl">
-                  No hay ensayos publicados. Sube uno a la derecha.
+                <div className="py-20 text-center text-slate-400 font-bold border-[3px] border-dashed border-slate-300 rounded-2xl">
+                  No hay ensayos para mostrar.
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {globalExams.map(exam => (
-                    <div key={exam.id} className="bg-slate-800 border-2 border-black rounded-xl p-4 flex justify-between items-center group">
+                    <div key={exam.id} className="bg-[#f8f7ff] border-[3px] border-black rounded-xl p-4 flex flex-col justify-between hover:scale-[1.02] transition-transform">
                       <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="bg-[#6c40d6] text-white text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-tighter">GLOBAL</span>
-                          <h3 className="font-bold text-lg leading-tight">{exam.metadata?.asignatura}</h3>
+                        <div className="flex justify-between items-start mb-2">
+                          <span className="bg-[#6c40d6] text-white text-[10px] font-black px-2 py-1 rounded border-2 border-black uppercase">GLOBAL</span>
+                          <span className="text-xs font-bold text-slate-500">{exam.metadata?.año || '2024'}</span>
                         </div>
-                        <p className="text-xs text-slate-400 font-bold uppercase">{exam.data.length} preguntas • {exam.metadata?.año || '2024'}</p>
+                        <h3 className="font-black text-lg mb-1 leading-tight uppercase">{exam.metadata?.asignatura}</h3>
+                        <p className="text-xs font-bold text-slate-600 uppercase">{exam.data.length} preguntas</p>
                       </div>
-                      <button 
-                        onClick={() => handleDeleteGlobal(exam.id)}
-                        className="text-slate-500 hover:text-rose-400 transition-colors p-2"
-                      >
-                        <Trash2 size={20} />
-                      </button>
+                      <div className="mt-4 pt-4 border-t-2 border-dashed border-black/10 flex justify-end">
+                        <button onClick={() => handleDeleteGlobal(exam.id)} className="text-rose-500 hover:bg-rose-50 p-2 rounded-lg transition-colors border-2 border-black bg-white shadow-[2px_2px_0_#000]">
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
               )}
             </div>
-          </div>
 
-          {/* Upload Section */}
-          <div className="space-y-6">
-            <div className="bg-slate-900 border-[3px] border-black rounded-2xl p-6 shadow-[6px_6px_0_#000]">
-              <h2 className="text-xl font-black uppercase mb-4 flex items-center gap-2">
-                <Plus size={24} className="text-emerald-400" />
-                Subir Nuevo
+            <div className={cardCls}>
+              <h2 className="text-xl font-black uppercase mb-4 flex items-center gap-2 text-[#351b69]">
+                <Plus size={24} className="text-emerald-500" /> Nuevo Ensayo
               </h2>
-              <p className="text-xs font-bold text-slate-500 mb-4 uppercase tracking-wider">Pega el JSON del ensayo aquí</p>
-              
               <textarea
-                className="w-full h-80 bg-slate-800 border-2 border-black rounded-xl p-4 font-mono text-xs text-slate-300 focus:outline-none focus:border-emerald-500 transition-colors"
-                placeholder={'{\n  "metadata": { "asignatura": "..." },\n  "preguntas": [...]\n}'}
+                className="w-full h-80 bg-[#f4f2f9] border-[3px] border-black rounded-xl p-4 font-mono text-xs text-black focus:outline-none focus:ring-4 ring-[#6c40d6]/20 transition-all mb-4"
+                placeholder={'{\n  "metadata": {...},\n  "preguntas": [...]\n}'}
                 value={jsonInput}
                 onChange={e => setJsonInput(e.target.value)}
               />
-
               <button
                 onClick={handleUploadExam}
                 disabled={actionLoading}
-                className="w-full mt-4 bg-emerald-600 text-white py-4 rounded-xl border-[4px] border-black font-black text-xl flex items-center justify-center gap-2 shadow-[4px_4px_0_#000] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all"
+                className={`w-full py-4 text-lg ${btnPrimary} flex items-center justify-center gap-2`}
               >
-                {actionLoading ? <Loader2 className="animate-spin" /> : <><Save /> Publicar Ensayo</>}
+                {actionLoading ? <Loader2 className="animate-spin" /> : <><Save /> PUBLICAR</>}
               </button>
             </div>
-            
-            <div className="bg-[#6c40d6]/10 border-[3px] border-[#6c40d6]/30 rounded-2xl p-6">
-              <h3 className="font-black text-sm uppercase mb-2 text-indigo-300 flex items-center gap-2">
-                <AlertCircle size={16} /> Recordatorio
-              </h3>
-              <p className="text-xs text-indigo-100/70 font-semibold leading-relaxed">
-                Los ensayos subidos aquí aparecerán automáticamente en la sección "Practicar" de todos los usuarios registrados.
-              </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className={cardCls}>
+              <h2 className="text-2xl font-black uppercase mb-6 flex items-center gap-3 text-[#351b69]">
+                <Users size={28} className="text-[#6c40d6]" /> Usuarios
+              </h2>
+              <div className="space-y-3">
+                {users.length === 0 && <p className="text-center py-8 text-slate-400 font-bold uppercase text-xs">Vacío</p>}
+                {users.map(u => (
+                  <div key={u.id} className="flex items-center justify-between p-4 bg-[#f8f7ff] border-[3px] border-black rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-indigo-100 border-2 border-black rounded-full flex items-center justify-center">
+                        <Users size={20} className="text-indigo-600" />
+                      </div>
+                      <span className="font-bold text-lg">{u.username}</span>
+                    </div>
+                    <button onClick={() => handleDeleteUser(u.id, false)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg border-2 border-black bg-white shadow-[2px_2px_0_#000]">
+                      <UserMinus size={18} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className={cardCls}>
+              <h2 className="text-2xl font-black uppercase mb-6 flex items-center gap-3 text-[#351b69]">
+                <ShieldCheck size={28} className="text-[#6c40d6]" /> Administradores
+              </h2>
+              <div className="space-y-3">
+                {admins.map(a => (
+                  <div key={a.id} className="flex items-center justify-between p-4 bg-[#f1eeff] border-[3px] border-black rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-[#e0d6ff] border-2 border-black rounded-full flex items-center justify-center">
+                        <ShieldCheck size={20} className="text-[#351b69]" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-bold text-lg">{a.username}</span>
+                        <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border border-black ${a.has_password ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                          {a.has_password ? 'Clave Activa' : 'Solo Passkey'}
+                        </span>
+                      </div>
+                    </div>
+                    {a.username !== 'admin' && (
+                      <button onClick={() => handleDeleteUser(a.id, true)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg border-2 border-black bg-white shadow-[2px_2px_0_#000]">
+                        <ShieldAlert size={18} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        )}
+      </main>
     </div>
   );
 }

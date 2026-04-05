@@ -39,6 +39,13 @@ db.exec(`
     FOREIGN KEY (admin_id) REFERENCES admins(id)
   );
 
+  CREATE TABLE IF NOT EXISTS user_data (
+    user_id TEXT PRIMARY KEY,
+    data TEXT,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  );
+
   CREATE TABLE IF NOT EXISTS global_exams (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     metadata TEXT,

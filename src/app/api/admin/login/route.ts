@@ -11,9 +11,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
+    if (!admin.password_hash) {
+      return NextResponse.json({ error: 'La clave normal ha sido desactivada. Usa tu Passkey para entrar.' }, { status: 401 });
+    }
+
     const isValid = verifyPassword(password, admin.password_hash);
     if (!isValid) {
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+      return NextResponse.json({ error: 'Credenciales inválidas' }, { status: 401 });
     }
 
     const res = NextResponse.json({ success: true });
