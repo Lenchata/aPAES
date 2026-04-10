@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Outfit, Bowlby_One } from "next/font/google";
 import "./globals.css";
 import AuthGate from "../components/AuthGate";
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
@@ -23,6 +24,7 @@ export default function RootLayout({
         <AuthGate>
           {children}
         </AuthGate>
+        <Analytics />
       </body>
     </html>
   );
