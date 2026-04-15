@@ -1,0 +1,53 @@
+{
+	"/": [],
+	"/admin": [],
+	"/admin/login": [],
+	"/api/admin/admins": [
+		"src/routes/api/admin/admins/+server.ts"
+	],
+	"/api/admin/global-exams": [
+		"src/routes/api/admin/global-exams/+server.ts"
+	],
+	"/api/admin/login": [
+		"src/routes/api/admin/login/+server.ts"
+	],
+	"/api/admin/passkey/login/options": [
+		"src/routes/api/admin/passkey/login/options/+server.ts"
+	],
+	"/api/admin/passkey/login/verify": [
+		"src/routes/api/admin/passkey/login/verify/+server.ts"
+	],
+	"/api/admin/passkey/options": [
+		"src/routes/api/admin/passkey/options/+server.ts"
+	],
+	"/api/admin/passkey/verify": [
+		"src/routes/api/admin/passkey/verify/+server.ts"
+	],
+	"/api/admin/users": [
+		"src/routes/api/admin/users/+server.ts"
+	],
+	"/api/auth/login/options": [
+		"src/routes/api/auth/login/options/+server.ts"
+	],
+	"/api/auth/login/verify": [
+		"src/routes/api/auth/login/verify/+server.ts"
+	],
+	"/api/auth/registration/options": [
+		"src/routes/api/auth/registration/options/+server.ts"
+	],
+	"/api/auth/registration/verify": [
+		"src/routes/api/auth/registration/verify/+server.ts"
+	],
+	"/api/auth/session": [
+		"src/routes/api/auth/session/+server.ts"
+	],
+	"/api/global-exams": [
+		"src/routes/api/global-exams/+server.ts"
+	],
+	"/api/upload": [
+		"src/routes/api/upload/+server.ts"
+	],
+	"/api/user/data": [
+		"src/routes/api/user/data/+server.ts"
+	]
+}

@@ -1,0 +1,30 @@
+/* [next]/internal/font/google/bowlby_one_62eea24b.module.css [app-client] (css) */
+@font-face {
+  font-family: Bowlby One;
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../media/b04a7861492a4193-s.p.08dzumu~6f956.woff2") format("woff2");
+  unicode-range: U+??, U+131, U+152-153, U+2BB-2BC, U+2C6, U+2DA, U+2DC, U+304, U+308, U+329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: Bowlby One Fallback;
+  src: local(Arial);
+  ascent-override: 80.02%;
+  descent-override: 32.77%;
+  line-gap-override: 0.0%;
+  size-adjust: 138.88%;
+}
+
+.bowlby_one_62eea24b-module__R99DSG__className {
+  font-family: Bowlby One, Bowlby One Fallback;
+  font-style: normal;
+  font-weight: 400;
+}
+
+.bowlby_one_62eea24b-module__R99DSG__variable {
+  --font-bowlby: "Bowlby One", "Bowlby One Fallback";
+}
+
+/*# sourceMappingURL=%5Bnext%5D_internal_font_google_bowlby_one_62eea24b_module_css_0w3-wzy._.single.css.map*/
