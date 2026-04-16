@@ -28,6 +28,7 @@ export async function POST(req: NextRequest) {
     response.cookies.set('reg_user_id', userId, { httpOnly: true, secure: true, sameSite: 'strict', maxAge: 600 });
     return response;
   } catch (err: any) {
+    console.error('[registration/options]', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
