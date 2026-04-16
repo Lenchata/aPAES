@@ -10,7 +10,11 @@ declare global {
 
 if (!global._pgPool) {
   log('Creating pool →', process.env.POSTGRES_HOST);
-  global._pgPool = new Pool({ connectionString: process.env.POSTGRES_URL_NON_POOLING });
+  const connString = process.env.POSTGRES_URL_NON_POOLING!.replace(/[?&]sslmode=[^&]*/g, '');
+  global._pgPool = new Pool({
+    connectionString: connString,
+    ssl: { rejectUnauthorized: false },
+  });
   global._pgPool.on('connect', () => log('Connected ✓'));
   global._pgPool.on('error', (err) => console.error('[DB] Pool error:', err));
 }
