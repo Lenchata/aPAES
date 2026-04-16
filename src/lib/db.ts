@@ -1,57 +1,24 @@
-import Database from 'better-sqlite3';
-import path from 'path';
+import { Pool } from 'pg';
 
-const dbPath = path.join(process.cwd(), 'paes_auth.db');
-const db = new Database(dbPath);
+const dev = process.env.NODE_ENV === 'development';
+export const log = (...args: any[]) => { if (dev) console.log('[DB]', ...args); };
 
-// Initialize tables
-db.exec(`
-  CREATE TABLE IF NOT EXISTS users (
-    id TEXT PRIMARY KEY,
-    username TEXT UNIQUE,
-    current_challenge TEXT
-  );
+declare global {
+  // eslint-disable-next-line no-var
+  var _pgPool: Pool | undefined;
+}
 
-  CREATE TABLE IF NOT EXISTS credentials (
-    id TEXT PRIMARY KEY,
-    user_id TEXT,
-    public_key BLOB,
-    counter INTEGER,
-    device_type TEXT,
-    backed_up BOOLEAN,
-    transports TEXT,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-  );
+if (!global._pgPool) {
+  log('Creating pool →', process.env.POSTGRES_HOST);
+  global._pgPool = new Pool({ connectionString: process.env.POSTGRES_URL_NON_POOLING });
+  global._pgPool.on('connect', () => log('Connected ✓'));
+  global._pgPool.on('error', (err) => console.error('[DB] Pool error:', err));
+}
 
-  CREATE TABLE IF NOT EXISTS admins (
-    id TEXT PRIMARY KEY,
-    username TEXT UNIQUE,
-    password_hash TEXT,
-    current_challenge TEXT
-  );
+export const pool = global._pgPool;
 
-  CREATE TABLE IF NOT EXISTS admin_credentials (
-    id TEXT PRIMARY KEY,
-    admin_id TEXT,
-    public_key BLOB,
-    counter INTEGER,
-    transports TEXT,
-    FOREIGN KEY (admin_id) REFERENCES admins(id)
-  );
-
-  CREATE TABLE IF NOT EXISTS user_data (
-    user_id TEXT PRIMARY KEY,
-    data TEXT,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-  );
-
-  CREATE TABLE IF NOT EXISTS global_exams (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    metadata TEXT,
-    questions TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-`);
-
-export default db;
+export async function query<T = any>(sql: string, params?: any[]): Promise<T[]> {
+  log(sql.trim().split('\n')[0], params ?? '');
+  const { rows } = await pool.query(sql, params);
+  return rows;
+}

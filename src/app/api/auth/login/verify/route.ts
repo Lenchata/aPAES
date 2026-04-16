@@ -1,32 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuthenticationResponse } from '@simplewebauthn/server';
-import { rpID, origin, getUserCredentials, getUserById } from '@/lib/auth_server';
-import db from '@/lib/db';
+import { rpID, origin, getUserCredentials, getCredentialById, updateCredentialCounter } from '@/lib/auth_server';
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const challenge = req.cookies.get('login_challenge')?.value;
+    if (!challenge) return NextResponse.json({ error: 'No login session found' }, { status: 400 });
 
-    if (!challenge) {
-      return NextResponse.json({ error: 'No login session found' }, { status: 400 });
-    }
+    const credentialRow = await getCredentialById(body.id);
+    if (!credentialRow) return NextResponse.json({ error: 'No user associated with this credential' }, { status: 404 });
 
-    // Identify user by credential ID (discovery)
-    const credentialId = body.id;
-    const credentialRow = db.prepare('SELECT * FROM credentials WHERE id = ?').get(credentialId) as any;
-
-    if (!credentialRow) {
-      return NextResponse.json({ error: 'No user associated with this credential' }, { status: 404 });
-    }
-
-    const userId = credentialRow.user_id;
-    const credentials = getUserCredentials(userId);
-    const userCredential = credentials.find(c => c.id === credentialId);
-
-    if (!userCredential) {
-      return NextResponse.json({ error: 'Credential not found' }, { status: 400 });
-    }
+    const userId = credentialRow.user_id as string;
+    const credentials = await getUserCredentials(userId);
+    const userCredential = credentials.find(c => c.id === body.id);
+    if (!userCredential) return NextResponse.json({ error: 'Credential not found' }, { status: 400 });
 
     const verification = await verifyAuthenticationResponse({
       response: body,
@@ -42,19 +30,15 @@ export async function POST(req: NextRequest) {
       requireUserVerification: false,
     });
 
-    if (verification.verified) {
-      // Update counter
-      db.prepare('UPDATE credentials SET counter = ? WHERE id = ?').run(verification.authenticationInfo.newCounter, credentialId);
+    if (!verification.verified) return NextResponse.json({ error: 'Verification failed' }, { status: 400 });
 
-      const response = NextResponse.json({ verified: true });
-      response.cookies.set('auth_user_id', userId, { httpOnly: true, secure: true, sameSite: 'strict', maxAge: 15552000 }); // 30 days
-      response.cookies.delete('login_challenge');
-      return response;
-    } else {
-      return NextResponse.json({ error: 'Verification failed' }, { status: 400 });
-    }
+    await updateCredentialCounter(body.id, verification.authenticationInfo.newCounter);
+
+    const response = NextResponse.json({ verified: true });
+    response.cookies.set('auth_user_id', userId, { httpOnly: true, secure: true, sameSite: 'strict', maxAge: 15552000 });
+    response.cookies.delete('login_challenge');
+    return response;
   } catch (err: any) {
-    console.error('Login Verify Error:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
