@@ -8,10 +8,8 @@ export async function POST(req: NextRequest) {
     if (!adminId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
-    const admin = getAdminById(adminId);
-    if (!admin || !admin.current_challenge) {
-      return NextResponse.json({ error: 'Challenge not found' }, { status: 400 });
-    }
+    const admin = await getAdminById(adminId) as any;
+    if (!admin?.current_challenge) return NextResponse.json({ error: 'Challenge not found' }, { status: 400 });
 
     const verification = await verifyRegistrationResponse({
       response: body,
@@ -21,23 +19,15 @@ export async function POST(req: NextRequest) {
       requireUserVerification: false,
     });
 
-    if (verification.verified && verification.registrationInfo) {
-      const { credential } = verification.registrationInfo;
-      const { id, publicKey, counter } = credential;
-
-      saveAdminCredential(adminId, {
-        id,
-        publicKey,
-        counter,
-        transports: body.response?.transports || [],
-      });
-
-      saveAdminChallenge(adminId, '');
-
-      return NextResponse.json({ verified: true });
-    } else {
+    if (!verification.verified || !verification.registrationInfo) {
       return NextResponse.json({ error: 'Verification failed' }, { status: 400 });
     }
+
+    const { id, publicKey, counter } = verification.registrationInfo.credential;
+    await saveAdminCredential(adminId, { id, publicKey, counter, transports: body.response?.transports || [] });
+    await saveAdminChallenge(adminId, '');
+
+    return NextResponse.json({ verified: true });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

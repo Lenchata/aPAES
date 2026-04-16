@@ -4,14 +4,13 @@ import { getAllUsers, deleteUser } from '@/lib/auth_server';
 export async function GET(req: NextRequest) {
   const adminId = req.cookies.get('auth_admin_id')?.value;
   if (!adminId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  return NextResponse.json(getAllUsers());
+  return NextResponse.json(await getAllUsers());
 }
 
 export async function DELETE(req: NextRequest) {
   const adminId = req.cookies.get('auth_admin_id')?.value;
   if (!adminId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  
   const { id } = await req.json();
-  deleteUser(id);
+  await deleteUser(id);
   return NextResponse.json({ success: true });
 }
