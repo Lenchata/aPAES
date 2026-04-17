@@ -1,8 +1,8 @@
 import { query } from './db';
 
 export const rpName = 'aPAES Entrenamiento';
-export const rpID = process.env.NEXT_PUBLIC_RP_ID || 'localhost';
-export const origin = process.env.NEXT_PUBLIC_ORIGIN || 'http://localhost:3000';
+export const rpID = process.env.NEXT_PUBLIC_RP_ID || (process.env.VERCEL_URL ? process.env.VERCEL_URL.split(':')[0] : 'localhost');
+export const origin = process.env.NEXT_PUBLIC_ORIGIN || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
 
 // ── Users ─────────────────────────────────────────────────────────────────────
 
