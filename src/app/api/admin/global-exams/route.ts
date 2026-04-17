@@ -1,15 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { saveGlobalExam, getGlobalExams, deleteGlobalExam } from '@/lib/auth_server';
+import { saveGlobalExam, getGlobalExams, deleteGlobalExam, getUserById } from '@/lib/auth_server';
+
+async function isAdmin(req: NextRequest) {
+  const userId = req.cookies.get('auth_user_id')?.value;
+  if (!userId) return false;
+  const user = await getUserById(userId);
+  return !!user?.is_admin;
+}
 
 export async function GET(req: NextRequest) {
-  const adminId = req.cookies.get('auth_admin_id')?.value;
-  if (!adminId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!(await isAdmin(req))) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   return NextResponse.json(await getGlobalExams());
 }
 
 export async function POST(req: NextRequest) {
-  const adminId = req.cookies.get('auth_admin_id')?.value;
-  if (!adminId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!(await isAdmin(req))) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
     const { metadata, data } = await req.json();
     await saveGlobalExam(metadata, data);
@@ -20,8 +25,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const adminId = req.cookies.get('auth_admin_id')?.value;
-  if (!adminId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!(await isAdmin(req))) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
     const { id } = await req.json();
     await deleteGlobalExam(id);

@@ -75,7 +75,7 @@ export async function saveUserData(userId: string, data: any) {
 }
 
 export async function getAllUsers() {
-  const rows = await query('SELECT id, username FROM users');
+  const rows = await query('SELECT id, username, is_admin FROM users WHERE is_admin = FALSE OR is_admin IS NULL');
   return rows;
 }
 
@@ -83,70 +83,69 @@ export async function deleteUser(id: string) {
   await query('DELETE FROM users WHERE id = $1', [id]);
 }
 
-// ── Admins ────────────────────────────────────────────────────────────────────
+// ── Admins (Consolidated to users table) ──────────────────────────────────────
 
 export async function getAdminByUsername(username: string) {
-  const rows = await query('SELECT * FROM admins WHERE username = $1', [username]);
+  const rows = await query('SELECT * FROM users WHERE username = $1 AND is_admin = TRUE', [username]);
   return rows[0] ?? null;
 }
 
 export async function getAdminById(id: string) {
-  const rows = await query('SELECT * FROM admins WHERE id = $1', [id]);
+  const rows = await query('SELECT * FROM users WHERE id = $1 AND is_admin = TRUE', [id]);
   return rows[0] ?? null;
 }
 
 export async function saveAdminChallenge(id: string, challenge: string) {
-  await query('UPDATE admins SET current_challenge = $1 WHERE id = $2', [challenge, id]);
+  await query('UPDATE users SET current_challenge = $1 WHERE id = $2 AND is_admin = TRUE', [challenge, id]);
 }
 
 export async function getAdminCredentials(adminId: string) {
-  const rows = await query('SELECT * FROM admin_credentials WHERE admin_id = $1', [adminId]);
-  return rows.map(r => ({
-    id: r.id as string,
-    publicKey: new Uint8Array(r.public_key),
-    counter: r.counter as number,
-    transports: (r.transports as string[]) || [],
-  }));
+  // Now uses the same credentials table
+  return getUserCredentials(adminId);
 }
 
 export async function getAdminCredentialById(credentialId: string) {
-  const rows = await query('SELECT * FROM admin_credentials WHERE id = $1', [credentialId]);
-  return rows[0] ?? null;
+  return getCredentialById(credentialId);
 }
 
 export async function updateAdminCredentialCounter(credentialId: string, counter: number) {
-  await query('UPDATE admin_credentials SET counter = $1 WHERE id = $2', [counter, credentialId]);
+  return updateCredentialCounter(credentialId, counter);
 }
 
 export async function saveAdminCredential(adminId: string, credential: {
   id: string; publicKey: Uint8Array; counter: number; transports: string[];
 }) {
-  await query(
-    `INSERT INTO admin_credentials (id, admin_id, public_key, counter, transports)
-     VALUES ($1, $2, $3, $4, $5)`,
-    [credential.id, adminId, Buffer.from(credential.publicKey), credential.counter, credential.transports]
-  );
-  await query('UPDATE admins SET password_hash = NULL WHERE id = $1', [adminId]);
+  // Map to unified saveCredential format
+  await saveCredential(adminId, {
+    id: credential.id,
+    public_key: credential.publicKey,
+    counter: credential.counter,
+    transports: credential.transports,
+    device_type: 'cross-platform',
+    backed_up: true
+  });
+  // If an admin adds a passkey, we can clear their password hash if we want to enforce passkeys
+  await query('UPDATE users SET password_hash = NULL WHERE id = $1 AND is_admin = TRUE', [adminId]);
 }
 
 export async function getAllAdmins() {
-  const rows = await query('SELECT id, username, (password_hash IS NOT NULL) as has_password FROM admins');
+  const rows = await query('SELECT id, username, (password_hash IS NOT NULL) as has_password FROM users WHERE is_admin = TRUE');
   return rows;
 }
 
 export async function deleteAdmin(id: string) {
-  await query('DELETE FROM admins WHERE id = $1', [id]);
+  return deleteUser(id);
 }
 
 export async function createAdmin(id: string, username: string, password_hash: string) {
   await query(
-    'INSERT INTO admins (id, username, password_hash) VALUES ($1, $2, $3)',
+    'INSERT INTO users (id, username, password_hash, is_admin) VALUES ($1, $2, $3, TRUE)',
     [id, username, password_hash]
   );
 }
 
 export async function adminCount() {
-  const rows = await query('SELECT COUNT(*) as count FROM admins');
+  const rows = await query('SELECT COUNT(*) as count FROM users WHERE is_admin = TRUE');
   return parseInt(rows[0].count, 10);
 }
 

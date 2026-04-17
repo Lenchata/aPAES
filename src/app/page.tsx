@@ -4,8 +4,10 @@ import { useState, useEffect, useRef } from "react";
 import ExamPlayer from "./components/ExamPlayer";
 import {
   Menu, Home as HomeIcon, PenBox, Settings, Plus, Play,
-  Moon, Sun, BarChart2, Trash2, FolderOpen, ChevronDown, ChevronUp,
+  Moon, Sun, BarChart2, Trash2, FolderOpen, ChevronDown, ChevronUp, ShieldAlert
 } from "lucide-react";
+import AdminTab from "./components/AdminTab";
+import AddExamModal from "./components/AddExamModal";
 
 // ────────────────────────────────────────────────────────────────────────────
 // Types & constants
@@ -74,6 +76,9 @@ export default function Home() {
   const [dark, setDark] = useState(false);
   const isMobile = useIsMobile();
   const [mounted, setMounted] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [hasPasskey, setHasPasskey] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
@@ -110,6 +115,14 @@ export default function Home() {
       .then(r => r.json())
       .then(data => setGlobalExams(Array.isArray(data) ? data : []))
       .catch(console.error);
+
+    fetch('/api/auth/session')
+      .then(r => r.json())
+      .then(data => {
+        setIsAdmin(!!data.is_admin);
+        setHasPasskey(!!data.has_passkey);
+      })
+      .catch(console.error);
   }, []);
 
   // Keyboard Shortcuts
@@ -122,7 +135,6 @@ export default function Home() {
         case "i": setActiveTab("Inicio"); break;
         case "p": setActiveTab("Practicar"); break;
         case "g": setActiveTab("Progreso"); break;
-        case "c": setActiveTab("Configuracion"); break;
         case "m": setIsMenuOpen(o => !o); break;
         case "d": toggleDark(); break;
       }
@@ -211,8 +223,11 @@ export default function Home() {
     { id: "Inicio", icon: HomeIcon },
     { id: "Practicar", icon: PenBox },
     { id: "Progreso", icon: BarChart2 },
-    { id: "Configuracion", icon: Settings },
   ];
+
+  if (isAdmin) {
+    tabs.push({ id: "Administración", icon: ShieldAlert });
+  }
 
   // theme helpers
   const bg = dark ? "bg-[#0d0d18]" : "bg-[#ded9ed]";
@@ -240,9 +255,9 @@ export default function Home() {
         <main className="flex-1 overflow-y-auto pb-24 p-5">
           <div className="max-w-xl mx-auto w-full">
             {activeTab === "Inicio" && <InicioTab goals={goals} results={results} dark={dark} isMobile={true} />}
-            {activeTab === "Practicar" && <PracticarTab savedExams={allExams} sections={sections} onStartExam={e => setActiveExam(e)} onAddClick={() => setActiveTab("Configuracion")} onAddSection={addSection} onDeleteSection={deleteSection} onRenameSection={renameSection} onMoveExam={moveExam} onDeleteExam={deleteExam} onUpdateExam={updateExam} dark={dark} isMobile={true} />}
+            {activeTab === "Practicar" && <PracticarTab savedExams={allExams} sections={sections} onStartExam={e => setActiveExam(e)} onAddClick={() => setIsAddModalOpen(true)} onAddSection={addSection} onDeleteSection={deleteSection} onRenameSection={renameSection} onMoveExam={moveExam} onDeleteExam={deleteExam} onUpdateExam={updateExam} dark={dark} isMobile={true} />}
             {activeTab === "Progreso" && <ProgresoTab goals={goals} results={results} onUpdateGoals={updateGoals} onDeleteResult={deleteResult} dark={dark} isMobile={true} />}
-            {activeTab === "Configuracion" && <ConfiguracionTab onSaveExam={saveExam} dark={dark} isMobile={true} />}
+            {activeTab === "Administración" && isAdmin && <AdminTab dark={dark} isMobile={true} hasPasskey={hasPasskey} />}
           </div>
         </main>
 
@@ -324,11 +339,18 @@ export default function Home() {
       <main className="flex-1 p-10 overflow-y-auto outline-none">
         <div className="max-w-5xl mx-auto w-full">
           {activeTab === "Inicio" && <InicioTab goals={goals} results={results} dark={dark} isMobile={false} />}
-          {activeTab === "Practicar" && <PracticarTab savedExams={allExams} sections={sections} onStartExam={e => setActiveExam(e)} onAddClick={() => setActiveTab("Configuracion")} onAddSection={addSection} onDeleteSection={deleteSection} onRenameSection={renameSection} onMoveExam={moveExam} onDeleteExam={deleteExam} onUpdateExam={updateExam} dark={dark} isMobile={false} />}
+          {activeTab === "Practicar" && <PracticarTab savedExams={allExams} sections={sections} onStartExam={e => setActiveExam(e)} onAddClick={() => setIsAddModalOpen(true)} onAddSection={addSection} onDeleteSection={deleteSection} onRenameSection={renameSection} onMoveExam={moveExam} onDeleteExam={deleteExam} onUpdateExam={updateExam} dark={dark} isMobile={false} />}
           {activeTab === "Progreso" && <ProgresoTab goals={goals} results={results} onUpdateGoals={updateGoals} onDeleteResult={deleteResult} dark={dark} isMobile={false} />}
-          {activeTab === "Configuracion" && <ConfiguracionTab onSaveExam={saveExam} dark={dark} isMobile={false} />}
+          {activeTab === "Administración" && isAdmin && <AdminTab dark={dark} isMobile={false} hasPasskey={hasPasskey} />}
         </div>
       </main>
+
+      <AddExamModal 
+        isOpen={isAddModalOpen} 
+        onClose={() => setIsAddModalOpen(false)} 
+        onSaveExam={saveExam} 
+        dark={dark} 
+      />
     </div>
   );
 }
@@ -1032,85 +1054,3 @@ function ProgresoTab({ goals, results, onUpdateGoals, onDeleteResult, dark, isMo
   );
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-// ConfiguracionTab — only JSON import now
-// ────────────────────────────────────────────────────────────────────────────
-function ConfiguracionTab({ onSaveExam, dark, isMobile }: { onSaveExam: (meta: any, d: any) => void; dark: boolean; isMobile: boolean }) {
-  const [jsonInput, setJsonInput] = useState("");
-  const [error, setError] = useState("");
-  const [saved, setSaved] = useState(false);
-
-  const sub = dark ? "text-slate-400" : "text-slate-600";
-  const cardCls = `border-[4px] rounded-2xl p-8 flex flex-col gap-4 ${dark ? "bg-[#12112a] border-white/10" : "bg-white border-black"}`;
-
-  const handleSave = () => {
-    try {
-      const parsed = JSON.parse(jsonInput);
-      if (!parsed.preguntas || !Array.isArray(parsed.preguntas)) throw new Error("El JSON debe contener un arreglo 'preguntas'");
-      const formatted = parsed.preguntas.map((p: any) => ({
-        id: p.id,
-        text: p.enunciado || "Sin enunciado",
-        options: Object.values(p.opciones || {}),
-        correctAnswer: p.respuesta_correcta,
-        explanation: p.explicacion,
-      }));
-      setError("");
-      onSaveExam(parsed.metadata || {}, formatted);
-      setJsonInput("");
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-    } catch (e: any) {
-      setError("Error parseando el JSON: " + e.message);
-    }
-  };
-
-  const loadExample = () => setJsonInput(JSON.stringify({
-    metadata: { año: 2027, asignatura: "Competencia Matemática 1 (M1)", nivel_de_dificultad: "Regular" },
-    preguntas: [{
-      id: 1,
-      enunciado: "En una tienda, un artículo vale $120.000. El precio sube 15% y luego baja 10%. ¿Cuál es el precio final?",
-      opciones: { A: "$124.200", B: "$126.000", C: "$132.000", D: "$138.000" },
-      respuesta_correcta: "A",
-      explicacion: "120.000 × 1.15 = 138.000; 138.000 × 0.90 = 124.200.",
-    }],
-  }, null, 2));
-
-  return (
-    <div className="w-full flex flex-col gap-8">
-      <div className={cardCls}>
-        <h2 className="text-[1.8rem] font-black uppercase tracking-tighter text-[#6c40d6]" style={{ textShadow: "1px 1px 0 rgba(0,0,0,0.2)" }}>
-          Importar Ensayo (JSON)
-        </h2>
-        <p className={`text-sm font-bold ${sub}`}>Pega el contenido JSON del ensayo para agregarlo a tu biblioteca en Practicar.</p>
-
-        <div className="relative">
-          <textarea
-            className={`w-full ${isMobile ? "h-64" : "h-96"} p-5 font-mono text-[13px] border-[3px] rounded-lg shadow-inner focus:outline-none focus:border-[#7141d9] focus:ring-2 focus:ring-[#7141d9]/30 resize-y
-              ${dark ? "bg-white/5 border-white/10 text-slate-100" : "bg-[#f4f2f9] border-black text-black"}`}
-            value={jsonInput}
-            onChange={e => setJsonInput(e.target.value)}
-            placeholder={'{\n  "metadata": { "año": 2027, "asignatura": "Matemática 1" },\n  "preguntas": [\n    {\n      "id": 1,\n      "enunciado": "...",\n      "opciones": { "A": "...", "B": "..." },\n      "respuesta_correcta": "A",\n      "explicacion": "..."\n    }\n  ]\n}'}
-          />
-
-          <button
-            onClick={loadExample}
-            className={`absolute top-4 right-6 text-xs font-bold px-3 py-1 rounded border-2 transition-all active:translate-y-0.5
-              ${dark ? "bg-white/10 border-white/20 text-slate-200 hover:bg-white/20" : "bg-[#e2deef] border-black hover:bg-[#d0c6eb]"}`}
-          >
-            Cargar Ejemplo
-          </button>
-        </div>
-
-        {error && <div className="text-red-400 font-extrabold border-2 border-red-400 bg-red-500/10 p-3 rounded text-sm">{error}</div>}
-
-        <button
-          onClick={handleSave}
-          className={`flex items-center gap-2 px-8 py-3 text-xl font-black border-[4px] border-black rounded-xl transition-all active:translate-y-1 active:shadow-none self-start mt-2
-            ${saved ? "bg-emerald-500 text-white" : "bg-[#6c40d6] hover:bg-[#5b3eb8] text-white"}`}
-        >
-          <Plus size={24} strokeWidth={3} /> {saved ? "¡Guardado en Mis Ensayos!" : "Guardar en Mis Ensayos"}
-        </button>
-      </div>
-    </div>
-  );
-}

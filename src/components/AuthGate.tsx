@@ -2,24 +2,18 @@
 
 import React, { useState, useEffect } from 'react';
 import { startRegistration, startAuthentication } from '@simplewebauthn/browser';
-import { Fingerprint, LogIn, UserPlus, LogOut, ChevronRight, Loader2 } from 'lucide-react';
-import { usePathname } from 'next/navigation';
+import { Fingerprint, LogIn, UserPlus, LogOut, Loader2 } from 'lucide-react';
 
 export default function AuthGate({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<{ authenticated: boolean; username?: string } | null>(null);
+  const [user, setUser] = useState<{ authenticated: boolean; username?: string; is_admin?: boolean } | null>(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
   const [usernameInput, setUsernameInput] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
-  const pathname = usePathname();
 
   useEffect(() => {
-    if (!pathname.startsWith('/admin')) {
-      checkSession();
-    } else {
-      setLoading(false);
-    }
-  }, [pathname]);
+    checkSession();
+  }, []);
 
   const checkSession = async () => {
     try {
@@ -39,6 +33,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
     try {
       const resOptions = await fetch('/api/auth/registration/options', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: usernameInput || `Usuario-${Math.floor(Math.random() * 10000)}` }),
       });
 
@@ -100,10 +95,6 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
       setLoading(false);
     }
   };
-
-  if (pathname.startsWith('/admin')) {
-    return <>{children}</>;
-  }
 
   if (loading && !user) {
     return (
@@ -194,7 +185,12 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <div className="fixed top-4 right-4 z-[999]">
+      <div className="fixed top-4 right-4 z-[999] flex items-center gap-3">
+        {user?.is_admin && (
+           <span className="bg-[#351b69] text-white text-[10px] font-black px-2 py-1 rounded border-2 border-black uppercase shadow-[2px_2px_0_#000]">
+             Admin
+           </span>
+        )}
         <button
           onClick={handleLogout}
           className="bg-white/80 backdrop-blur-sm border-2 border-black px-3 py-1.5 rounded-lg font-black text-xs flex items-center gap-2 shadow-[2px_2px_0_#000] hover:bg-rose-50 hover:border-rose-500 hover:text-rose-500 transition-all"

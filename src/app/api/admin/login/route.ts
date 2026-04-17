@@ -11,7 +11,9 @@ export async function POST(req: NextRequest) {
     if (!verifyPassword(password, admin.password_hash)) return NextResponse.json({ error: 'Credenciales inválidas' }, { status: 401 });
 
     const res = NextResponse.json({ success: true });
-    res.cookies.set('auth_admin_id', admin._id, { httpOnly: true, secure: true, sameSite: 'strict', maxAge: 60 * 60 * 2 });
+    const cookieOptions = { httpOnly: true, secure: true, sameSite: 'strict' as const, maxAge: 60 * 60 * 2 };
+    res.cookies.set('auth_admin_id', admin.id, cookieOptions);
+    res.cookies.set('auth_user_id', admin.id, cookieOptions);
     return res;
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserById } from '@/lib/auth_server';
+import { getUserById, getUserCredentials } from '@/lib/auth_server';
 
 export async function GET(req: NextRequest) {
   const userId = req.cookies.get('auth_user_id')?.value;
@@ -10,7 +10,13 @@ export async function GET(req: NextRequest) {
     res.cookies.delete('auth_user_id');
     return res;
   }
-  return NextResponse.json({ authenticated: true, username: user.username });
+  const credentials = await getUserCredentials(userId);
+  return NextResponse.json({ 
+    authenticated: true, 
+    username: user.username, 
+    is_admin: !!user.is_admin,
+    has_passkey: credentials.length > 0
+  });
 }
 
 export async function DELETE() {
