@@ -22,3 +22,8 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.6);
 }
+
+/* Hide AuthGate overlay (admin badge + logout button) during exam */
+body[data-exam-active] .fixed.top-4.right-4.z-\[999\] {
+  display: none !important;
+}

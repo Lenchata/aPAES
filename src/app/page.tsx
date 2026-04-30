@@ -210,6 +210,15 @@ export default function Home() {
     sync({ savedExams: updated });
   };
 
+  useEffect(() => {
+    if (activeExam) {
+      document.body.setAttribute("data-exam-active", "true");
+    } else {
+      document.body.removeAttribute("data-exam-active");
+    }
+    return () => document.body.removeAttribute("data-exam-active");
+  }, [activeExam]);
+
   if (activeExam) {
     return (
       <ExamPlayer

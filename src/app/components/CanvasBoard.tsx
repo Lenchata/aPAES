@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Eraser, PenTool, Circle } from "lucide-react";
+import { Eraser, PenTool, Circle, X } from "lucide-react";
 
 const COLORS = ["#818cf8", "#f472b6", "#4ade80", "#facc15", "#f87171", "#ffffff"];
 const SIZES = [2, 4, 7, 12];
 
-export default function CanvasBoard() {
+export default function CanvasBoard({ onClose }: { onClose?: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -28,8 +28,9 @@ export default function CanvasBoard() {
       img.onload = () => ctx.drawImage(img, 0, 0);
       img.src = canvasData;
     }
-    ctx.strokeStyle = isEraser ? "#05050A" : penColor;
-    ctx.lineWidth = isEraser ? 24 : penSize;
+    ctx.globalCompositeOperation = "source-over";
+    ctx.strokeStyle = penColor;
+    ctx.lineWidth = penSize;
     ctx.lineJoin = "round";
     ctx.lineCap = "round";
   }, [canvasData, penColor, penSize, isEraser]);
@@ -37,8 +38,14 @@ export default function CanvasBoard() {
   const getCtx = () => {
     const ctx = canvasRef.current?.getContext("2d");
     if (ctx) {
-      ctx.strokeStyle = isEraser ? "#05050A" : penColor;
-      ctx.lineWidth = isEraser ? 24 : penSize;
+      if (isEraser) {
+        ctx.globalCompositeOperation = "destination-out";
+        ctx.lineWidth = 24;
+      } else {
+        ctx.globalCompositeOperation = "source-over";
+        ctx.strokeStyle = penColor;
+        ctx.lineWidth = penSize;
+      }
       ctx.lineJoin = "round";
       ctx.lineCap = "round";
     }
@@ -94,9 +101,9 @@ export default function CanvasBoard() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#0A0A14] border border-white/10 rounded-2xl overflow-hidden shadow-lg shadow-black/50">
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-3 px-4 py-2.5 bg-white/5 border-b border-white/10 text-slate-300 shrink-0">
+    <div className="flex flex-col h-full w-full">
+      {/* Toolbar — opaque, sits at top */}
+      <div className="flex flex-wrap items-center gap-3 px-4 py-2.5 bg-[#0A0A14]/95 backdrop-blur border-b border-white/10 text-slate-300 shrink-0 z-10">
         <div className="flex items-center gap-1.5 text-sm font-semibold">
           <PenTool size={15} className="text-indigo-400" />
           <span className="text-xs">Apuntes</span>
@@ -132,7 +139,7 @@ export default function CanvasBoard() {
         {/* Eraser */}
         <button
           onClick={() => setIsEraser(!isEraser)}
-          className={`flex items-center gap-1 text-xs px-2 py-1 rounded-md border transition-all ml-auto ${isEraser ? "bg-rose-500/30 border-rose-400 text-rose-300" : "border-white/10 hover:border-white/30"}`}
+          className={`flex items-center gap-1 text-xs px-2 py-1 rounded-md border transition-all ${isEraser ? "bg-rose-500/30 border-rose-400 text-rose-300" : "border-white/10 hover:border-white/30"}`}
           title="Borrador"
         >
           <Eraser size={13} /> Borrador
@@ -145,11 +152,24 @@ export default function CanvasBoard() {
         >
           Limpiar
         </button>
+
+        {/* Close button */}
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="ml-auto flex items-center gap-1 text-xs px-2 py-1 rounded-md border border-white/10 hover:border-white/30 hover:text-white transition-all"
+            title="Cerrar apuntes"
+          >
+            <X size={13} /> Cerrar
+          </button>
+        )}
       </div>
 
+      {/* Transparent canvas — draws over the questions */}
       <div
         ref={containerRef}
-        className="flex-1 w-full bg-[#05050A] cursor-crosshair relative touch-none"
+        className="flex-1 w-full cursor-crosshair relative touch-none"
+        style={{ background: "transparent" }}
       >
         <canvas
           ref={canvasRef}
@@ -161,6 +181,7 @@ export default function CanvasBoard() {
           onTouchMove={draw}
           onTouchEnd={stopDrawing}
           className="block w-full h-full"
+          style={{ background: "transparent" }}
         />
         {!canvasData && (
           <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-10">
