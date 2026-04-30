@@ -11,6 +11,18 @@ const bowlbyOne = Bowlby_One({ weight: "400", subsets: ["latin"], variable: "--f
 export const metadata: Metadata = {
   title: "aPAES | Entrenamiento Inteligente",
   description: "Procesa tus PDFs de ensayos PAES y prepárate con herramientas digitales avanzadas.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "aPAES",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
 };
 
 export default function RootLayout({
@@ -20,6 +32,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
+      <head>
+        <meta name="theme-color" content="#dadaec" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+      </head>
       <body className={`${inter.variable} ${outfit.variable} ${bowlbyOne.variable} font-inter antialiased bg-[#dadaec] text-black`}>
         <AuthGate>
           {children}

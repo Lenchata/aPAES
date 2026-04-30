@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import AdminTab from "./components/AdminTab";
 import AddExamModal from "./components/AddExamModal";
+import SyncIndicator from "../components/SyncIndicator";
+import { useOfflineSync } from "../lib/useOfflineSync";
 
 // ────────────────────────────────────────────────────────────────────────────
 // Types & constants
@@ -80,16 +82,14 @@ export default function Home() {
   const [hasPasskey, setHasPasskey] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
+  const { sync: syncToServer, loadData, syncStatus, isOnline } = useOfflineSync();
+
   useEffect(() => setMounted(true), []);
 
+  // Build the full data snapshot and sync it
   const sync = (patch: any) => {
-    // Autosave both to local and server for robustness
     const fullData = { savedExams, results, goals, sections, dark, ...patch };
-    fetch('/api/user/data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(fullData)
-    }).catch(console.error);
+    syncToServer(fullData);
   };
 
   const toggleDark = () => {
@@ -100,29 +100,31 @@ export default function Home() {
 
   // Cargar datos del server y globales
   useEffect(() => {
-    fetch('/api/user/data')
-      .then(r => r.json())
+    loadData()
       .then(data => {
-        if (data.savedExams) setSavedExams(data.savedExams);
-        if (data.results) setResults(data.results);
-        if (data.goals) setGoals(data.goals);
-        if (data.sections) setSections(data.sections);
-        if (data.dark !== undefined) setDark(data.dark);
+        if (!data) return;
+        const d = data as any;
+        if (d.savedExams) setSavedExams(d.savedExams);
+        if (d.results) setResults(d.results);
+        if (d.goals) setGoals(d.goals);
+        if (d.sections) setSections(d.sections);
+        if (d.dark !== undefined) setDark(d.dark);
       })
       .catch(console.error);
 
     fetch('/api/global-exams')
-      .then(r => r.json())
+      .then(r => r.ok ? r.json() : [])
       .then(data => setGlobalExams(Array.isArray(data) ? data : []))
       .catch(console.error);
 
     fetch('/api/auth/session')
-      .then(r => r.json())
+      .then(r => r.ok ? r.json() : {})
       .then(data => {
         setIsAdmin(!!data.is_admin);
         setHasPasskey(!!data.has_passkey);
       })
       .catch(console.error);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Keyboard Shortcuts
@@ -246,9 +248,12 @@ export default function Home() {
             <img fetchPriority="high" src="/apaes.svg" alt="logo" className="w-8 h-8" />
             <span className="text-xl text-white font-bowlby tracking-wider" style={{ WebkitTextStroke: "1px black" }}>aPAES</span>
           </div>
-          <button aria-label="Modo oscuro" onClick={toggleDark} className="text-white p-2 rounded-lg bg-white/10">
-            {dark ? <Sun size={20} /> : <Moon size={20} />}
-          </button>
+          <div className="flex items-center gap-2">
+            <SyncIndicator status={syncStatus} isOnline={isOnline} dark={dark} />
+            <button aria-label="Modo oscuro" onClick={toggleDark} className="text-white p-2 rounded-lg bg-white/10">
+              {dark ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+          </div>
         </header>
 
         {/* Contenido */}
@@ -324,7 +329,12 @@ export default function Home() {
         </div>
 
         {/* Dark mode */}
-        <div className="mt-auto w-full px-3 pt-6">
+        <div className="mt-auto w-full px-3 pt-6 flex flex-col gap-2">
+          {isMenuOpen && (
+            <div className="flex justify-center">
+              <SyncIndicator status={syncStatus} isOnline={isOnline} dark={dark} />
+            </div>
+          )}
           <button
             onClick={toggleDark}
             className={`w-full py-2 px-3 flex items-center ${isMenuOpen ? "justify-start" : "justify-center"} gap-3 text-sm font-bold border-[2px] border-white/20 rounded-lg transition-all text-white hover:bg-white/10`}
