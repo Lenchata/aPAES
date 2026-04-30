@@ -119,7 +119,7 @@ export default function Home() {
 
     fetch('/api/auth/session')
       .then(r => r.ok ? r.json() : {})
-      .then(data => {
+      .then((data: { is_admin?: boolean; has_passkey?: boolean }) => {
         setIsAdmin(!!data.is_admin);
         setHasPasskey(!!data.has_passkey);
       })
