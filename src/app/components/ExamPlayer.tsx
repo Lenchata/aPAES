@@ -98,11 +98,11 @@ export default function ExamPlayer({
 
     return (
       <div className="min-h-screen bg-[#05050A] text-white flex items-center justify-center p-6">
-        <div className="bg-[#0A0A14] border border-white/10 rounded-3xl p-10 w-full max-w-xl flex flex-col gap-6 shadow-[0_20px_60px_-15px_rgba(99,102,241,0.25)]">
+        <div className="bg-[#0A0A14] border border-white/10 rounded-3xl p-10 w-full max-w-xl flex flex-col gap-6">
 
           {/* Header */}
           <div className="flex flex-col items-center gap-3">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-indigo-500 to-pink-500 flex items-center justify-center">
+            <div className="w-20 h-20 rounded-full bg-indigo-500 flex items-center justify-center">
               <CheckCircle2 size={44} className="text-white" />
             </div>
             <h1 className="font-outfit text-3xl font-extrabold">Ensayo Finalizado</h1>
@@ -204,7 +204,7 @@ export default function ExamPlayer({
           <div className={`${isMobile ? "px-2 py-1 text-xs" : "px-4 py-2"} bg-white/5 rounded-lg border border-white/10 font-mono font-bold tracking-widest text-indigo-400 flex items-center gap-2`}>
             <Clock size={isMobile ? 14 : 18} /> {mins}:{secs}
           </div>
-          <div className={`${isMobile ? "px-2 py-1 text-xs" : "px-4 py-2"} bg-gradient-to-r from-indigo-500/20 to-transparent rounded-lg border border-indigo-500/30 text-indigo-200 font-semibold`}>
+          <div className={`${isMobile ? "px-2 py-1 text-xs" : "px-4 py-2"} bg-white/5 rounded-lg border border-white/10 text-slate-200 font-semibold`}>
             {isMobile ? `${currentIndex + 1}/${questions.length}` : `Pregunta ${currentIndex + 1} / ${questions.length}`}
           </div>
           {/* Canvas toggle button */}
@@ -225,7 +225,6 @@ export default function ExamPlayer({
       </header>
 
       <main className="flex-1 flex overflow-hidden relative">
-        <div className="absolute top-0 right-1/4 w-[600px] h-[600px] bg-pink-500/5 blur-[120px] rounded-full pointer-events-none" />
 
         {/* Question content — always rendered, pointer-events blocked when canvas is open */}
         <section className={`flex-1 overflow-y-auto flex flex-col pt-4 ${isMobile ? "p-4" : "p-6"} ${canvasOpen ? "pointer-events-none select-none" : ""}`}>
@@ -244,7 +243,7 @@ export default function ExamPlayer({
                     onClick={() => handleSelect(letter)}
                     className={`w-full text-left ${isMobile ? "p-4" : "p-5"} rounded-2xl border transition-all duration-200 flex items-start gap-4
                       ${isSelected
-                        ? "bg-indigo-500 border-indigo-400 shadow-[0_0_30px_rgba(99,102,241,0.3)] translate-x-1"
+                        ? "bg-indigo-500 border-indigo-400 translate-x-1"
                         : "bg-[#0A0A14] border-white/10 hover:border-white/30 hover:bg-white/5"}`}
                   >
                     <span className={`font-bold mt-0.5 ${isSelected ? "text-indigo-200" : "text-slate-500"}`}>{letter}</span>
@@ -265,14 +264,14 @@ export default function ExamPlayer({
               {currentIndex === questions.length - 1 ? (
                 <button
                   onClick={finishExam}
-                  className={`${isMobile ? "px-6 py-2 text-sm" : "px-8 py-3 font-bold"} flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-white hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all`}
+                  className={`${isMobile ? "px-6 py-2 text-sm" : "px-8 py-3 font-bold"} flex items-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white transition-all`}
                 >
                   <CheckCircle2 size={isMobile ? 16 : 20} /> Finalizar
                 </button>
               ) : (
                 <button
                   onClick={() => setCurrentIndex(i => Math.min(questions.length - 1, i + 1))}
-                  className={`${isMobile ? "px-6 py-2 text-sm" : "px-8 py-3 font-bold"} flex items-center gap-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all`}
+                  className={`${isMobile ? "px-6 py-2 text-sm" : "px-8 py-3 font-bold"} flex items-center gap-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white transition-all`}
                 >
                   {isMobile ? "" : "Siguiente"} <ChevronRight size={isMobile ? 16 : 20} />
                 </button>
