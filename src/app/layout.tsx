@@ -3,6 +3,7 @@ import { Inter, Outfit, Bowlby_One } from "next/font/google";
 import "./globals.css";
 import AuthGate from "../components/AuthGate";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
@@ -41,6 +42,7 @@ export default function RootLayout({
           {children}
         </AuthGate>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
